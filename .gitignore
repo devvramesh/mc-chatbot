@@ -1,0 +1,73 @@
+### Python Stuff ###
+
+__pycache__/
+.cache/
+.pytest_cache/
+*.py[cod]
+*$py.class
+.env
+
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+docs/_build/
+
+### Compiled source ###
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+### OS generated files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### IDE/Editor Files ###
+*.code-workspace
+.vscode/
+
+### Misc ###
+.ipynb_checkpoints/
+logs/
+
+### R ###
+.Rhistory
+.Rproj.user
+
+
+### LaTeX Files ### 
+*.log
+*.synctex*
+*.pytxcode 
+*.out
+*.fls 
+*.fdb_latexmk
+*.aux 
+*.toc
+*.nav
+*.snm
+*.vrb
+*.blg
+*.bbl
+job_postings/local_classification/download_model.ipynb
