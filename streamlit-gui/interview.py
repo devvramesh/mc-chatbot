@@ -33,9 +33,11 @@ hide_st_style = """
     <style>
         [data-testid="appCreatorAvatar"] {
             display: none !important;
+            visibility: hidden;
         }
         ._profileContainer_gzau3_53, ._profilePreview_gzau3_63 {
             display: none !important;
+            visibility: hidden;
         }
     </style>
 """
