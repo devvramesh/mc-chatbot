@@ -31,8 +31,12 @@ uploaded_file = st.file_uploader("Upload a file", type=("pdf", "docx"))
 # Hide the Github and Streamlit Icons
 hide_st_style = """
     <style>
-    #MainMenu {visibility: hidden;} 
-    footer {visibility: hidden;} 
+        [data-testid="appCreatorAvatar"] {
+            display: none !important;
+        }
+        ._profileContainer_gzau3_53, ._profilePreview_gzau3_63 {
+            display: none !important;
+        }
     </style>
 """
 st.markdown(hide_st_style, unsafe_allow_html=True)
