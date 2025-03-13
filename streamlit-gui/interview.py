@@ -35,14 +35,6 @@ if config.LOGINS:
 else:
     st.session_state.username = "testaccount"
 
-# Create directories if they do not already exist
-if not os.path.exists(config.TRANSCRIPTS_DIRECTORY):
-    os.makedirs(config.TRANSCRIPTS_DIRECTORY)
-if not os.path.exists(config.TIMES_DIRECTORY):
-    os.makedirs(config.TIMES_DIRECTORY)
-if not os.path.exists(config.BACKUPS_DIRECTORY):
-    os.makedirs(config.BACKUPS_DIRECTORY)
-
 
 # Initialise session state
 if "interview_active" not in st.session_state:
