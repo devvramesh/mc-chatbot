@@ -171,9 +171,9 @@ LOGINS = False
 
 
 # Directories
-TRANSCRIPTS_DIRECTORY = "../data/transcripts/"
-TIMES_DIRECTORY = "../data/times/"
-BACKUPS_DIRECTORY = "../data/backups/"
+TRANSCRIPTS_DIRECTORY = "/AI interviewer/Referee Report Guide/interviews-main-referee/data/transcripts/"
+TIMES_DIRECTORY = "/AI interviewer/Referee Report Guide/interviews-main-referee/data/times/"
+BACKUPS_DIRECTORY = "/AI interviewer/Referee Report Guide/interviews-main-referee/data/backups/"
 
 
 # Avatars displayed in the chat interface
