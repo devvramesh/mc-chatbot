@@ -28,20 +28,21 @@ st.title("AI Interviewer")
 
 uploaded_file = st.file_uploader("Upload a file", type=("pdf", "docx"))
 
-# Hide the Github and Streamlit Icons
-hide_st_style = """
-    <style>
-        [data-testid="appCreatorAvatar"] {
-            display: none !important;
-            visibility: hidden;
-        }
-        ._profileContainer_gzau3_53, ._profilePreview_gzau3_63 {
-            display: none !important;
-            visibility: hidden;
-        }
-    </style>
+# Inject JavaScript to remove the GitHub button
+hide_github_js = """
+    <script>
+    window.onload = function() {
+        // Wait for the page to load and remove the GitHub button
+        setTimeout(() => {
+            let elements = document.querySelectorAll('footer a[href*="github.com"]');
+            elements.forEach(el => el.style.display = 'none');
+        }, 1000);  // Delay to ensure DOM is loaded
+    };
+    </script>
 """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+
+# Inject JavaScript using Streamlit components
+st.components.v1.html(hide_github_js, height=0)
 
 # Check if usernames and logins are enabled
 if config.LOGINS:
