@@ -78,11 +78,11 @@ def save_interview_data(
     for message in st.session_state.messages: 
         text_content.write(f"{message['role']}: {message['content']}\n".encode("utf-8"))
     text_content.seek(0) 
-    dbx.files_upload(text_content.read(), os.path.join(transcripts_directory, f"{username}{file_name_addition_transcript}.txt", mode=dropbox.files.WriteMode("overwrite"))) 
+    dbx.files_upload(text_content.read(), os.path.join(transcripts_directory, f"{username}{file_name_addition_transcript}.txt"), mode=dropbox.files.WriteMode("overwrite")) 
 
     # Store file with start time and duration of interview
     text_content = io.BytesIO() 
     duration = (time.time() - st.session_state.start_time) / 60
     text_content.write(f"Start time (UTC): {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime(st.session_state.start_time))}\nInterview duration (minutes): {duration:.2f}".encode("utf-8")) 
     text_content.seek(0) 
-    dbx.files_upload(text_content.read(), os.path.join(times_directory, f"{username}{file_name_addition_time}.txt", mode=dropbox.files.WriteMode("overwrite")))
+    dbx.files_upload(text_content.read(), os.path.join(times_directory, f"{username}{file_name_addition_time}.txt"), mode=dropbox.files.WriteMode("overwrite"))
