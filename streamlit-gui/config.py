@@ -116,10 +116,9 @@ There are specific codes that must be used exclusively in designated situations.
 
 ## **Pre-written Closing Messages for Codes**
 
-CLOSING_MESSAGES = {}
-CLOSING_MESSAGES["5j3k"] = "Thank you for participating, the evaluation concludes here."
-CLOSING_MESSAGES["x7y8"] = "Thank you for participating in the evaluation, this was the last question. Many thanks for your answers and time to help with advancing a research project!"
-CLOSING_MESSAGES["z9w1"] = "I can’t help with that request."
+"5j3k" = "Thank you for participating, the evaluation concludes here."
+"x7y8" = "Thank you for participating in the evaluation, this was the last question. Many thanks for your answers and time to help with advancing a research project!"
+"z9w1" = "I can’t help with that request."
 
 ---
 
@@ -161,19 +160,26 @@ SYSTEM_PROMPT = f"""{INTERVIEW_OUTLINE}
 
 
 # API parameters
-MODEL = "claude-3-7-sonnet-20250219"  # or e.g. "claude-3-5-sonnet-20240620" (OpenAI GPT or Anthropic Claude models)
+# AI_COMPANY = "anthropic"
+# MODEL = "claude-3-7-sonnet-20250219"  # or e.g. "claude-3-5-sonnet-20240620" (OpenAI GPT or Anthropic Claude models)
+AI_COMPANY = "openai"
+MODEL = 'gpt-3.5-turbo-0125'
 TEMPERATURE = None  # (None for default value)
 MAX_OUTPUT_TOKENS = 2048
 
 
 # Display login screen with usernames and simple passwords for studies
-LOGINS = False
+LOGINS = True 
 
 
 # Directories
 TRANSCRIPTS_DIRECTORY = "/AI interviewer/Referee Report Guide/interviews-main-referee/data/transcripts/"
 TIMES_DIRECTORY = "/AI interviewer/Referee Report Guide/interviews-main-referee/data/times/"
 BACKUPS_DIRECTORY = "/AI interviewer/Referee Report Guide/interviews-main-referee/data/backups/"
+
+# Page info
+PAGE_TITLE = "TEPEI 2025 AI Interviewer"
+PAGE_ICON = "./resources/hbs_page_icon.png"
 
 
 # Avatars displayed in the chat interface
