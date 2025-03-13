@@ -28,6 +28,15 @@ st.title("AI Interviewer")
 
 uploaded_file = st.file_uploader("Upload a file", type=("pdf", "docx"))
 
+# Hide the Github and Streamlit Icons
+hide_st_style = """
+    <style>
+    #MainMenu {visibility: hidden;} 
+    footer {visibility: hidden;} 
+    </style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
 # Check if usernames and logins are enabled
 if config.LOGINS:
     # Check password (displays login screen)
