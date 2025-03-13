@@ -70,4 +70,8 @@ logs/
 *.vrb
 *.blg
 *.bbl
-job_postings/local_classification/download_model.ipynb
+
+
+### Streamlit ### 
+*/.streamlit/secrets.toml 
+streamlit-gui/streamlit_authentication/*
