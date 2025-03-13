@@ -22,7 +22,11 @@ else:
     )
 
 # Set page title and icon
-st.set_page_config(page_title="Interview", page_icon=config.AVATAR_INTERVIEWER)
+st.set_page_config(page_title="AI Interview", page_icon=config.AVATAR_INTERVIEWER)
+
+st.title("AI Interviewer")
+
+uploaded_file = st.file_uploader("Upload a file", type=("pdf", "docx"))
 
 # Check if usernames and logins are enabled
 if config.LOGINS:
