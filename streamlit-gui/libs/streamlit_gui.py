@@ -183,7 +183,7 @@ class StreamlitGUI:
                 )
 
 
-    @st.dialog("AI Bot Instructions", width='large')
+    @st.dialog("AI Referee Report Guide", width='large')
     def display_instructions(self) -> None: 
         st.markdown(self.interview_instructions)
 

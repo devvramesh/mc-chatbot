@@ -213,7 +213,7 @@ This AI tool has been designed to help you structure your evaluation of the pape
 
 - **Recommendation:** Clearly state whether you recommend acceptance, rejection, or revision, and briefly justify your decision. 
 - **Critical Review of the Paper:** Assess the paper's significance, clarity, originality, and alignment with relevant literature. 
-- **Analysis --- Main Body of the Comments:** Discuss specific aspects such as theoretical framing, methodology, data quality, robustness of results, and the strength of the argument.
+- **Analysis — Main Body of the Comments:** Discuss specific aspects such as theoretical framing, methodology, data quality, robustness of results, and the strength of the argument.
 - **Minor Comments:** Note smaller issues such as unclear phrasing, missing citations, or minor technical errors.
 """
 
