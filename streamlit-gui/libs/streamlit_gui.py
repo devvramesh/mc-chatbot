@@ -248,8 +248,11 @@ class StreamlitGUI:
         st.session_state.interview_status = False 
         # show the login form 
         st.session_state.show_login_form = True
+        # reset quit button hit 
+        st.session_state.quit_button_hit = False 
+
         # remove any other session variable to start over 
-        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id', 'quit_button_hit']: 
+        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id']: 
             if key in st.session_state:
                 del st.session_state[key]
 
