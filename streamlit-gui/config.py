@@ -222,8 +222,8 @@ This AI tool has been designed to help you structure your evaluation of the pape
 # AI_COMPANY = "anthropic"
 # MODEL = "claude-3-7-sonnet-20250219"  # or e.g. "claude-3-5-sonnet-20240620" (OpenAI GPT or Anthropic Claude models)
 AI_COMPANY = "openai"
-MODEL = 'gpt-4o-2024-08-06'
-# MODEL = 'gpt-4.5-preview-2025-02-27'
+# MODEL = 'gpt-4o-2024-08-06'
+MODEL = 'gpt-4.5-preview-2025-02-27'
 TEMPERATURE = None  # (None for default value)
 MAX_OUTPUT_TOKENS = 2048
 
