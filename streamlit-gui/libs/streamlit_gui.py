@@ -260,14 +260,7 @@ class StreamlitGUI:
     def on_user_input_submit(self) -> None: 
         """Function that runs when user input is submitted"""
         # get the user inputs 
-        # text = st.session_state.user_input 
-        text = st.session_state.user_input.text 
-        # files = st.session_state.user_input.files 
-        # read the files 
-        # file_contents = [] 
-        # for file in files: 
-        #     file_contents.append(f"Content from file '{file.name}': {self.read_file(file)}") 
-
+        text = st.session_state.user_input 
         # display the user input 
         with self.chat_container: 
             with st.chat_message('user', avatar=self.user_avatar): 
@@ -284,38 +277,6 @@ class StreamlitGUI:
         client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
         stream = client.stream_message(model=self.ai_model, messages=st.session_state.gui_message_history.copy(), max_tokens=self.max_tokens, system_message=self.system_message)
         self.stream_message(stream) 
-
-
-    # def read_file(self, file) -> str:
-    #     """Read content from uploaded file"""
-    #     if file.type == "application/pdf":
-    #         return self.read_pdf(file)
-    #     elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    #         return self.read_docx(file)
-    #     else:
-    #         return "Unsupported file type"
-
-    # def read_pdf(self, file) -> str:
-    #     """Extract text from PDF file"""
-    #     try:
-    #         pdf_reader = PyPDF2.PdfReader(BytesIO(file.read()))
-    #         text = ""
-    #         for page in pdf_reader.pages:
-    #             text += page.extract_text() + "\n"
-    #         return text
-    #     except Exception as e:
-    #         return f"Error reading PDF: {str(e)}"
-
-    # def read_docx(self, file) -> str:
-    #     """Extract text from DOCX file"""
-    #     try:
-    #         doc = Document(BytesIO(file.read()))
-    #         text = ""
-    #         for paragraph in doc.paragraphs:
-    #             text += paragraph.text + "\n"
-    #         return text
-    #     except Exception as e:
-    #         return f"Error reading DOCX: {str(e)}"
 
 
     def on_quit_button(self) -> None: 
