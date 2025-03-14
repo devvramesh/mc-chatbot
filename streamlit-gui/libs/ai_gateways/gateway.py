@@ -66,6 +66,21 @@ class AICompanyGateway:
         self.__client = None 
 
 
+    def create_message(self, model:str, messages:List[Dict], max_tokens:int, system_message:str=None, **kwargs) -> str: 
+        """Returns a message from the API. Overriden by subclass 
+
+        Args:
+            model (str): the name of the model 
+            messages (List[Dict]): a list of messages of the conversation so far 
+            max_tokens (int): the max number of tokens that can be generated in the chat completion 
+            system_message (str): a system message, if any. The system message can also be included in the messages param. Defaults to None.
+
+        Returns:
+            str: the messsage sent by the API 
+        """
+        pass 
+
+
     def stream_message(self, model:str, messages:List[Dict], max_tokens:int, system_message:str=None, **kwargs) -> Generator[str, None, None]: 
         """Streams a message from the API. Overriden by subclass 
 

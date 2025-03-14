@@ -15,6 +15,28 @@ class AnthropicGateway (AICompanyGateway):
         self.__client = anthropic.Anthropic(api_key=api_key) 
 
 
+    def create_message(self, model:str, messages:List[Dict], max_tokens:int, system_message:str=None, **kwargs) -> str: 
+        """Returns a message from the API. Overriden by subclass 
+
+        Args:
+            model (str): the name of the model 
+            messages (List[Dict]): a list of messages of the conversation so far 
+            max_tokens (int): the max number of tokens that can be generated in the chat completion 
+            system_message (str): a system message, if any. The system message can also be included in the messages param. Defaults to None.
+
+        Returns:
+            str: the messsage sent by the API 
+        """
+        msg = self.__client.messages.create(
+            model=model, 
+            messages=messages, 
+            max_tokens=max_tokens, 
+            system=system_message, 
+            **kwargs
+        ) 
+        return msg.content[0].text 
+
+
     def stream_message(self, model:str, messages:List[Dict], max_tokens:int, system_message:str=None, **kwargs) -> Generator[str, None, None]: 
         """Streams a message from the API. Overriden by subclass 
 
