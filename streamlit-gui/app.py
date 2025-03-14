@@ -14,6 +14,7 @@ if __name__ == "__main__":
         interviewer_avatar=config.AVATAR_INTERVIEWER,
         user_avatar=config.AVATAR_RESPONDENT, 
         closing_messages=config.CLOSING_MESSAGES, 
-        dropbox_path=config.DROPBOX_PATH 
+        dropbox_path=config.DROPBOX_PATH, 
+        interview_instructions=config.INTERVIEW_INSTRUCTIONS 
     )
     app.run() 

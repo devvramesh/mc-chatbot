@@ -16,7 +16,7 @@ from .ai_gateways.gateway import AICompanyGateway
 
 
 class StreamlitGUI: 
-    def __init__(self, page_title:str, page_icon:str, ai_company:str, ai_model:str, max_tokens:int, system_message:str, generate_summary_prompt:str, auth_required:bool, interviewer_avatar:str, user_avatar:str, closing_messages:Dict[str, str], dropbox_path:str) -> None: 
+    def __init__(self, page_title:str, page_icon:str, ai_company:str, ai_model:str, max_tokens:int, system_message:str, generate_summary_prompt:str, auth_required:bool, interviewer_avatar:str, user_avatar:str, closing_messages:Dict[str, str], dropbox_path:str, interview_instructions:str) -> None: 
         """Set up the object
 
         Args:
@@ -32,6 +32,7 @@ class StreamlitGUI:
             user_avatar (str): the string for the user avatar 
             closing_messages (Dict[str, str]): a dict that maps closing code to closing message 
             dropbox_path (str): the path to the dropbox data folder to store the transcripts 
+            interview_instructions (str): the instructions to display for the bot 
         """
         # set the global vars
         self.page_title = page_title 
@@ -46,6 +47,7 @@ class StreamlitGUI:
         self.user_avatar = user_avatar
         self.closing_messages = closing_messages 
         self.dropbox_path = dropbox_path 
+        self.interview_instructions = interview_instructions
 
         # set up the page 
         st.set_page_config(
@@ -70,6 +72,7 @@ class StreamlitGUI:
             st.title(self.page_title) 
         self.setup_session_vars() 
         self.display_login_page() 
+        self.display_instructions_button() 
         self.display_quit_interview_button() 
         self.display_restart_interview_button()
         self.display_generate_summary_button() 
@@ -80,8 +83,12 @@ class StreamlitGUI:
         """Main function that runs the whole page"""
         self.setup() 
         self.display_message_history() 
+        if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
+            self.display_instructions()
         if st.session_state.interview_status: 
-            self.stream_initial_message() 
+            self.stream_initial_message()  
+        if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
+            st.session_state.first_instructions_shown = True 
 
 
     # --------------------------------------------------------------------------
@@ -126,6 +133,9 @@ class StreamlitGUI:
             # flag for whether the quit button has been hit or not 
             st.session_state.quit_button_hit = False 
 
+        if 'first_instructions_shown' not in st.session_state: 
+            st.session_state.first_instructions_shown = False 
+
 
     def display_login_page(self) -> None: 
         """Display the login page and the log out button after authentication success"""
@@ -159,6 +169,23 @@ class StreamlitGUI:
                         st.session_state.interview_status = True 
                     # add logout button that runs self.on_logout when hit 
                     self.authenticator.logout(callback=self.on_logout) 
+
+
+    def display_instructions_button(self) -> None: 
+        if not st.session_state.show_login_form: 
+            with st.sidebar: 
+                st.markdown("To view the instructions for the assignment and the AI interviewer, click instructions below")
+                st.button(
+                    label="Instructions", 
+                    key='instructions', 
+                    help='View instructions', 
+                    on_click=self.display_instructions
+                )
+
+
+    @st.dialog("AI Bot Instructions", width='large')
+    def display_instructions(self) -> None: 
+        st.markdown(self.interview_instructions)
 
 
     def display_quit_interview_button(self) -> None: 
@@ -249,7 +276,9 @@ class StreamlitGUI:
         # show the login form 
         st.session_state.show_login_form = True
         # reset quit button hit 
-        st.session_state.quit_button_hit = False 
+        st.session_state.quit_button_hit = False
+        # reset instructions flag 
+        st.session_state.first_instructions_shown = False 
 
         # remove any other session variable to start over 
         for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id']: 
