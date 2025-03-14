@@ -205,7 +205,7 @@ The report *must* follow these rules:
 - *If not enough information is available in the for any of the sections, make note of it in the final report and move on but don't add suggestions for further discussion* 
 - Do not make more probing questions or probing statements
 
-The final report should maintain a professional and structured format to help both the authors and journal editors make informed decisions. Remember this is the end of the conversation
+The final report should maintain a professional and structured format to help both the authors and journal editors make informed decisions. 
 """
 
 
