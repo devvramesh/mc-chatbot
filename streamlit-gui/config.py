@@ -209,12 +209,22 @@ The final report should maintain a professional and structured format to help bo
 """
 
 INTERVIEW_INSTRUCTIONS = """
-This AI tool has been designed to help you structure your evaluation of the paper. The goal is to have a casual and thoughtful conversation with the AI interviewer to express your opinions about the paper along the following key points: 
+This AI tool has been designed to help you structure your evaluation of the paper. The goal is to have a casual and thoughtful conversation with the AI interviewer to express your opinions about the paper rather than copying and pasting your report into the chat. Identify the key points you want to make based on the following structure:
 
 - **Recommendation:** Clearly state whether you recommend acceptance, rejection, or revision, and briefly justify your decision. 
 - **Critical Review of the Paper:** Assess the paper's significance, clarity, originality, and alignment with relevant literature. 
 - **Analysis — Main Body of the Comments:** Discuss specific aspects such as theoretical framing, methodology, data quality, robustness of results, and the strength of the argument.
 - **Minor Comments:** Note smaller issues such as unclear phrasing, missing citations, or minor technical errors.
+
+Here are some instructions for using the bot: 
+
+- When you start the conversation, the AI will ask you to provide a brief summary of your overall impression in under two minutes.
+- Answer naturally and thoughtfully. The tool will guide you by focusing on one theme at a time and asking follow-up questions to ensure a deep exploration of each aspect.
+- Only move to a new theme when you indicate you're ready, so take your time to fully explore each topic.
+- Once you feel you've covered everything you wanted to address, simply click the "Generate" button on the left sidebar to compile your chat into a structured summary of your referee report and conversation with the AI interviewer.
+-  Please note that all interactions are saved **only for this session**. **Refreshing or closing the window may delete your progress**, so be sure to click the "Generate" button once you've covered everything to compile your chat into a structured draft of your referee report.
+
+Remember, the goal of this interaction is to help you build a well-organized and insightful evaluation that you can refine into your final report. Enjoy the conversation and let it guide you to a comprehensive review of the paper!
 """
 
 
