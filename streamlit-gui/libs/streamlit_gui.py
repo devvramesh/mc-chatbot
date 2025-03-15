@@ -10,8 +10,10 @@ from docx import Document
 from io import BytesIO
 from pathlib import Path 
 import threading 
+import logging 
 
 from .ai_gateways.gateway import AICompanyGateway 
+from .logger import setup_logger 
 
 
 class StreamlitGUI: 
@@ -54,13 +56,14 @@ class StreamlitGUI:
             page_icon=self.page_icon
         )
 
-        if self.auth_required: 
+        if self.auth_required and 'authenticator' not in st.session_state: 
             # set up the authentication 
             stauth_config = yaml.safe_load(st.secrets['STREAMLIT_AUTHENTICATOR_CONFIG'])
-            self.authenticator = stauth.Authenticate(credentials=stauth_config['credentials'], auto_hash=False)
+            st.session_state.authenticator = stauth.Authenticate(credentials=stauth_config['credentials'], auto_hash=False)
 
         # create some containers for the header (where the title will live) and for the chat (where chat history will live) 
         self.header_container = st.container() 
+        self.error_container = st.container() 
         self.chat_container = st.container() 
 
 
@@ -82,12 +85,15 @@ class StreamlitGUI:
         """Main function that runs the whole page"""
         self.setup() 
         self.display_message_history() 
-        if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
-            self.display_instructions()
-        if st.session_state.interview_status: 
-            self.stream_initial_message()  
-        if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
-            st.session_state.first_instructions_shown = True 
+        if st.session_state.reached_error: 
+            self.display_error_message() 
+        else: 
+            if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
+                self.display_instructions()
+            if st.session_state.interview_status: 
+                self.stream_initial_message()  
+            if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
+                st.session_state.first_instructions_shown = True 
 
 
     # --------------------------------------------------------------------------
@@ -133,7 +139,18 @@ class StreamlitGUI:
             st.session_state.quit_button_hit = False 
 
         if 'first_instructions_shown' not in st.session_state: 
+            # flag for whether the instructions have been shown for the first time or not 
             st.session_state.first_instructions_shown = False 
+
+        if 'reached_error' not in st.session_state: 
+            # flag for whether we reached an error or not 
+            st.session_state.reached_error = False 
+
+        if 'log' not in st.session_state: 
+            # objects for logging 
+            log_stream, log = setup_logger('streamlit-gui')
+            st.session_state.log = log 
+            st.session_state.log_stream = log_stream 
 
 
     def display_login_page(self) -> None: 
@@ -145,7 +162,7 @@ class StreamlitGUI:
                 with st.empty(): 
                     try: 
                         # show the login form 
-                        self.authenticator.login()
+                        st.session_state.authenticator.login()
                     except Exception as e: 
                         st.error(e) 
 
@@ -167,10 +184,11 @@ class StreamlitGUI:
                         # unless we are in quit button hit status, start the interview
                         st.session_state.interview_status = True 
                     # add logout button that runs self.on_logout when hit 
-                    self.authenticator.logout(callback=self.on_logout) 
+                    st.session_state.authenticator.logout(callback=self.on_logout) 
 
 
     def display_instructions_button(self) -> None: 
+        """Shows the instructions button"""
         if not st.session_state.show_login_form: 
             with st.sidebar: 
                 st.markdown("To view the instructions for the assignment and the AI interviewer, click instructions below")
@@ -184,6 +202,7 @@ class StreamlitGUI:
 
     @st.dialog("AI Referee Report Guide", width='large')
     def display_instructions(self) -> None: 
+        """Displays instructions in a pop up dialog"""
         st.markdown(self.interview_instructions)
 
 
@@ -192,7 +211,7 @@ class StreamlitGUI:
         if st.session_state.interview_status: 
             # Add 'Quit' button to the side bar 
             with st.sidebar: 
-                st.markdown("To end the interview and receive a summary of your chat, click quit below")
+                st.markdown("To end the interview, click quit below")
                 # add the button and runs self.on_quit_button when hit 
                 st.button(
                     label="Quit", 
@@ -207,7 +226,7 @@ class StreamlitGUI:
         if st.session_state.quit_button_hit and not st.session_state.interview_status and not st.session_state.show_login_form: 
             # Only show the restart button if the quit button has been hit, interview is no longer active, and we are not showing the login page
             with st.sidebar: 
-                st.markdown("To restart the interview, click restart below")
+                st.markdown("To restart the interview from scratch, click restart below")
                 # add the button and runs self.on_restart_button when hit 
                 st.button(
                     label="Restart", 
@@ -219,7 +238,7 @@ class StreamlitGUI:
 
     def display_generate_summary_button(self) -> None: 
         """Displays the generate summary button"""
-        if not st.session_state.show_login_form: 
+        if not st.session_state.show_login_form and not st.session_state.reached_error: 
             # button is always displayed unless we are in the login page to allow people to generate the document at any time 
             with st.sidebar: 
                 st.markdown("To generate a summary document of the interview, click generate below") 
@@ -251,14 +270,36 @@ class StreamlitGUI:
 
     def display_user_input(self) -> None: 
         """Display the user input """
-        if st.session_state.interview_status and not st.session_state.quit_button_hit: 
+        if st.session_state.interview_status and not st.session_state.quit_button_hit and not st.session_state.reached_error: 
             # only display the user input section if the interview is active and the quit button hasn't been hit 
             # display the input section and runs self.on_user_input_submit when text submitted 
             st.chat_input(
                 placeholder="Your message here", 
                 key="user_input", 
-                on_submit=self.on_user_input_submit,
+                on_submit=self.on_user_input_submit
             )
+
+
+    def display_error_message(self) -> None: 
+        """Displays an error message"""
+        def try_again(): 
+            """Call back function for trying again"""
+            self.log("warning", "Trying again after error", st.session_state.to_dict())
+            # reset reached error 
+            st.session_state.reached_error = False 
+            # return back to interview status 
+            st.session_state.interview_status = True 
+            # return to no quit button 
+            st.session_state.quit_button_hit = False 
+
+        with self.error_container: 
+            st.error("An error occurred. Please try again or contact your course instructor.")
+            st.button("Try again", on_click=try_again)
+
+        # set the interview state to False as it's over 
+        st.session_state.interview_status = False 
+        # set the quit button to true 
+        st.session_state.quit_button_hit = True 
 
 
     # --------------------------------------------------------------------------
@@ -268,6 +309,8 @@ class StreamlitGUI:
 
     def on_logout(self, *args, **kwargs) -> None: 
         """Function that runs when log out button is hit"""
+        self.log("warning", "Logging out", st.session_state.to_dict())
+
         # stop the interview 
         st.session_state.interview_status = False 
         # show the login form 
@@ -276,33 +319,44 @@ class StreamlitGUI:
         st.session_state.quit_button_hit = False
         # reset instructions flag 
         st.session_state.first_instructions_shown = False 
+        # reset reached error 
+        st.session_state.reached_error = False 
 
         # remove any other session variable to start over 
-        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id']: 
+        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id', 'log', 'log_stream']: 
             if key in st.session_state:
                 del st.session_state[key]
 
 
     def on_user_input_submit(self) -> None: 
         """Function that runs when user input is submitted"""
-        # get the user inputs 
-        text = st.session_state.user_input 
-        # display the user input 
-        with self.chat_container: 
-            with st.chat_message('user', avatar=self.user_avatar): 
-                st.markdown(text)
+        try: 
+            # get the user inputs 
+            text = st.session_state.user_input 
 
-        # save the user input  
-        self.save_msg_to_session('user', text)
+            self.log("warning", f"User input: {text}", st.session_state.to_dict())
 
-        # save to the transcript so far to dropbox 
-        thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
-        thread.start() 
+            # display the user input 
+            with self.chat_container: 
+                message = st.chat_message('user', avatar=self.user_avatar) 
+                message.markdown(text)
 
-        # get the response from the AI bot and stream the message 
-        client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
-        stream = client.stream_message(model=self.ai_model, messages=st.session_state.gui_message_history.copy(), max_tokens=self.max_tokens, system_message=self.system_message)
-        self.stream_message(stream) 
+            # save the user input  
+            self.save_msg_to_session('user', text)
+
+            # save to the transcript so far to dropbox 
+            thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
+            thread.start() 
+
+            # get the response from the AI bot and stream the message 
+            client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
+            stream = client.stream_message(model=self.ai_model, messages=st.session_state.gui_message_history.copy(), max_tokens=self.max_tokens, system_message=self.system_message)
+            self.stream_message(stream) 
+        except Exception as e: 
+            st.session_state.gui_message_history = st.session_state.gui_message_history[:-1] 
+            st.session_state.transcript_history = st.session_state.transcript_history[:-1] 
+            st.session_state.reached_error = True 
+            self.log("error", f"Error processing user input: {e}", st.session_state.to_dict())
 
 
     def on_quit_button(self) -> None: 
@@ -320,6 +374,8 @@ class StreamlitGUI:
         # set the quit button to true 
         st.session_state.quit_button_hit = True 
 
+        self.log("warning", "Quit interview", st.session_state.to_dict())
+
 
     @st.dialog("Interview Summary Document")
     def on_generate_summary_button(self) -> None: 
@@ -327,51 +383,62 @@ class StreamlitGUI:
 
         Creates a pop up dialog that shows a loading spinner and then displays a download button 
         """
+        self.log("warning", "Generating summary document", st.session_state.to_dict())
         # start the loading spinner and show the time elapsed so far 
         with st.spinner("Generating document", show_time=True):
-            # ask the AI to generate a summary 
-            client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
-            generate_message = [{'role': 'user', 'content': self.generate_summary_prompt}]
-            summary = client.create_message(
-                model=self.ai_model, 
-                messages=st.session_state.gui_message_history + generate_message, 
-                max_tokens=self.max_tokens, 
-                system_message=self.system_message 
-            )
+            try: 
+                # ask the AI to generate a summary 
+                client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
+                generate_message = [{'role': 'user', 'content': self.generate_summary_prompt}]
+                summary = client.create_message(
+                    model=self.ai_model, 
+                    messages=st.session_state.gui_message_history + generate_message, 
+                    max_tokens=self.max_tokens, 
+                    system_message=self.system_message 
+                )
 
-            # check if there are any closing messages in there 
-            _, summary = self.check_closing_messages(summary) 
+                # check if there are any closing messages in there 
+                _, summary = self.check_closing_messages(summary) 
+            except Exception as e: 
+                st.session_state.reached_error = True 
+                self.log("error", f"Error asking AI to generate summary: {e}", st.session_state.to_dict())
+                return 
 
-            # start the word document 
-            doc = Document() 
-            # add a title 
-            doc.add_heading("Interview Summary", 0) 
-            # add some details about the report 
-            doc.add_paragraph(f"Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}")
+            try: 
+                # start the word document 
+                doc = Document() 
+                # add a title 
+                doc.add_heading("Interview Summary", 0) 
+                # add some details about the report 
+                doc.add_paragraph(f"Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}")
 
-            # add section for the summary 
-            doc.add_heading("Summary", 1) 
-            doc.add_paragraph(summary)
+                # add section for the summary 
+                doc.add_heading("Summary", 1) 
+                doc.add_paragraph(summary)
 
-            # add section for the transcript 
-            doc.add_heading("Interview Transcript", 1)
-            for message in st.session_state.gui_message_history: 
-                # first bold the role 
-                p = doc.add_paragraph() 
-                role_run = p.add_run(f"{message['role'].title()}: ")
-                role_run.bold = True 
+                # add section for the transcript 
+                doc.add_heading("Interview Transcript", 1)
+                for message in st.session_state.gui_message_history: 
+                    # first bold the role 
+                    p = doc.add_paragraph() 
+                    role_run = p.add_run(f"{message['role'].title()}: ")
+                    role_run.bold = True 
 
-                # now add the message 
-                content_run = p.add_run(message['content']) 
+                    # now add the message 
+                    content_run = p.add_run(message['content']) 
 
-                # italicize the assistant messages 
-                if message['role'] == 'assistant': 
-                    content_run.italic = True 
+                    # italicize the assistant messages 
+                    if message['role'] == 'assistant': 
+                        content_run.italic = True 
 
-            # save the document into BytesIO 
-            doc_bytes = BytesIO() 
-            doc.save(doc_bytes) 
-            doc_bytes.seek(0) 
+                # save the document into BytesIO 
+                doc_bytes = BytesIO() 
+                doc.save(doc_bytes) 
+                doc_bytes.seek(0) 
+            except Exception as e: 
+                st.session_state.reached_error = True 
+                self.log("error", f"Error creating docx document: {e}", st.session_state.to_dict())
+                return 
 
         # save the document to dropbox 
         thread = threading.Thread(target=self.save_summary_to_dropbox, args=(st.session_state.to_dict(), doc_bytes)) 
@@ -392,18 +459,22 @@ class StreamlitGUI:
 
     def on_restart_button(self) -> None: 
         """Function that runs when the restart button is hit"""
+        self.log("warning", "Restarting interview", st.session_state.to_dict())
         # reset some session state variables 
-        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id', 'quit_button_hit']: 
+        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id', 'quit_button_hit', 'log', 'log_stream']: 
             if key in st.session_state:
                 del st.session_state[key]
         # restart the interview 
         st.session_state.interview_status = True 
+        # reset reached error 
+        st.session_state.reached_error = False 
 
 
     def stream_initial_message(self) -> None: 
         """Streams the initial message from the AI"""
         if not st.session_state.gui_message_history: 
             # no messages so far, stream initial message 
+            self.log("warning", "Streaming initial message", st.session_state.to_dict())
             client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
             stream = client.stream_message(model=self.ai_model, messages=[{"role": "user", "content": "Hi!"}], max_tokens=self.max_tokens, system_message=self.system_message)
             self.stream_message(stream) 
@@ -415,47 +486,75 @@ class StreamlitGUI:
         Args:
             stream (Generator): the generator that contains the messages being streamed 
         """ 
-        with self.chat_container: 
-            # stream messages within the chat container
-            with st.chat_message("assistant", avatar=self.interviewer_avatar): 
-                # stream messages as the assistant 
-                streamlit_msg = st.empty() # streamlit object for where the message will go 
-                msg_so_far = "" # record the message received so far
-                for chunk in stream: 
-                    # iterate through the stream and add the results 
-                    if chunk: 
-                        msg_so_far += chunk 
-                    found_closing_msg, closing_msg = self.check_closing_messages(msg_so_far) 
+        self.log("warning", "Streaming message", st.session_state.to_dict())
+        try: 
+            with self.chat_container: 
+                # stream messages within the chat container
+                with st.chat_message("assistant", avatar=self.interviewer_avatar): 
+                    # stream messages as the assistant 
+                    streamlit_msg = st.empty() # streamlit object for where the message will go 
+                    msg_so_far = "" # record the message received so far
+                    for chunk in stream: 
+                        # iterate through the stream and add the results 
+                        if chunk: 
+                            msg_so_far += chunk 
+                        found_closing_msg, closing_msg = self.check_closing_messages(msg_so_far) 
+                        if found_closing_msg: 
+                            streamlit_msg.empty() 
+                            break 
+                        if len(msg_so_far) > 10: 
+                            streamlit_msg.markdown(msg_so_far + "▌")
+
+                    # after all the text has streamed
                     if found_closing_msg: 
-                        streamlit_msg.empty() 
-                        break 
-                    if len(msg_so_far) > 10: 
-                        streamlit_msg.markdown(msg_so_far + "▌")
+                        # we found a closing message, so display closing message and shut down the conversation 
+                        final_msg = closing_msg
+                        st.session_state.interview_status = False 
+                        st.session_state.quit_button_hit = True 
+                    else: 
+                        # did not find closing message, display the message sent 
+                        final_msg = msg_so_far 
 
-                # after all the text has streamed
-                if found_closing_msg: 
-                    # we found a closing message, so display closing message and shut down the conversation 
-                    final_msg = closing_msg
-                    st.session_state.interview_status = False 
-                    st.session_state.quit_button_hit = True 
-                else: 
-                    # did not find closing message, display the message sent 
-                    final_msg = msg_so_far 
+                    # display the message received 
+                    streamlit_msg.markdown(final_msg)
 
-                # display the message received 
-                streamlit_msg.markdown(final_msg)
+                    self.log("warning", f"Got final message {final_msg}", st.session_state.to_dict())
 
-                # save the message to the session 
-                self.save_msg_to_session('assistant', final_msg)
+                    # save the message to the session 
+                    self.save_msg_to_session('assistant', final_msg)
 
-                # save the transcript to dropbox 
-                thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
-                thread.start() 
+                    # save the transcript to dropbox 
+                    thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
+                    thread.start() 
+        except Exception as e: 
+            st.session_state.reached_error = True 
+            self.log("error", f"Error streaming message from AI: {e}", st.session_state.to_dict())
 
 
     # --------------------------------------------------------------------------
     # utils 
     # --------------------------------------------------------------------------
+
+
+    def log(self, level:str, message:str, session_state:Dict) -> None: 
+        show_traceback = level.upper() == "ERROR"
+        session_state["log_stream"].seek(0, 2) 
+
+        level = getattr(logging, level.upper())
+        session_state['log'].log(level, message, exc_info=show_traceback) 
+
+        session_state['log_stream'].seek(0) 
+        thread = threading.Thread(target=self.save_log_to_dropbox, args=(session_state, session_state['log_stream'])) 
+        thread.start() 
+        session_state['log_stream'].seek(0, 2) 
+
+
+    def save_log_to_dropbox(self, session_state:Dict, log_stream:BytesIO) -> None: 
+        save_fpath = Path(self.dropbox_path)/session_state['username']/f"log+{session_state['username']}+{session_state['session_id']}.log"
+
+        content = log_stream.getvalue().encode("utf-8") 
+
+        self.save_to_dropbox(BytesIO(content), str(save_fpath))
 
 
     def save_transcript_to_dropbox(self, session_state:Dict) -> None: 
@@ -468,6 +567,8 @@ class StreamlitGUI:
         """
         # creates the path to save to 
         save_fpath = Path(self.dropbox_path)/session_state['username']/f"transcript+{session_state['username']}+{session_state['session_id']}.csv"
+
+        self.log("warning", f"Saving transcript to dropbox to {save_fpath}", session_state)
 
         # save the transcript history 
         df = pd.DataFrame(session_state['transcript_history'])
@@ -488,6 +589,8 @@ class StreamlitGUI:
         """
         # create the path to save to 
         save_fpath = Path(self.dropbox_path)/session_state['username']/f"summary_document+{session_state['username']}+{session_state['session_id']}+{int(datetime.now(timezone.utc).timestamp())}.docx"
+
+        self.log("warning", f"Saving summary to dropbox to {save_fpath}", session_state)
 
         # save the content to dropbox 
         self.save_to_dropbox(doc_content, str(save_fpath))
