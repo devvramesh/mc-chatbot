@@ -6,7 +6,6 @@ import yaml
 from typing import Dict, Generator, Tuple 
 import dropbox 
 import pandas as pd 
-# import PyPDF2
 from docx import Document
 from io import BytesIO
 from pathlib import Path 
@@ -258,9 +257,7 @@ class StreamlitGUI:
             st.chat_input(
                 placeholder="Your message here", 
                 key="user_input", 
-                on_submit=self.on_user_input_submit, 
-                accept_file=True, 
-                file_type=['pdf', 'docx']
+                on_submit=self.on_user_input_submit,
             )
 
 
