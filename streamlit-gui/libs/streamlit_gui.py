@@ -59,7 +59,13 @@ class StreamlitGUI:
         if self.auth_required and 'authenticator' not in st.session_state: 
             # set up the authentication 
             stauth_config = yaml.safe_load(st.secrets['STREAMLIT_AUTHENTICATOR_CONFIG'])
-            st.session_state.authenticator = stauth.Authenticate(credentials=stauth_config['credentials'], auto_hash=False)
+            st.session_state.authenticator = stauth.Authenticate(
+                credentials=stauth_config['credentials'], 
+                cookie_name=self.page_title.replace(' ', '_').lower(), 
+                key=st.secrets['COOKIE_SECRET'], 
+                cookie_expiry_days=7, 
+                auto_hash=False
+            )
 
         # create some containers for the header (where the title will live) and for the chat (where chat history will live) 
         self.header_container = st.container() 
