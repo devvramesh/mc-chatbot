@@ -56,16 +56,10 @@ class StreamlitGUI:
             page_icon=self.page_icon
         )
 
-        if self.auth_required and 'authenticator' not in st.session_state: 
+        if self.auth_required: 
             # set up the authentication 
             stauth_config = yaml.safe_load(st.secrets['STREAMLIT_AUTHENTICATOR_CONFIG'])
-            st.session_state.authenticator = stauth.Authenticate(
-                credentials=stauth_config['credentials'], 
-                cookie_name=self.page_title.replace(' ', '_').lower(), 
-                key=st.secrets['COOKIE_SECRET'], 
-                cookie_expiry_days=7, 
-                auto_hash=False
-            )
+            self.authenticator = stauth.Authenticate(credentials=stauth_config['credentials'], auto_hash=False)
 
         # create some containers for the header (where the title will live) and for the chat (where chat history will live) 
         self.header_container = st.container() 
@@ -168,7 +162,7 @@ class StreamlitGUI:
                 with st.empty(): 
                     try: 
                         # show the login form 
-                        st.session_state.authenticator.login()
+                        self.authenticator.login()
                     except Exception as e: 
                         st.error(e) 
 
@@ -190,7 +184,7 @@ class StreamlitGUI:
                         # unless we are in quit button hit status, start the interview
                         st.session_state.interview_status = True 
                     # add logout button that runs self.on_logout when hit 
-                    st.session_state.authenticator.logout(callback=self.on_logout) 
+                    self.authenticator.logout(callback=self.on_logout) 
 
 
     def display_instructions_button(self) -> None: 
