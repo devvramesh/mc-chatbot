@@ -387,6 +387,7 @@ class StreamlitGUI:
         # start the loading spinner and show the time elapsed so far 
         with st.spinner("Generating document", show_time=True):
             try: 
+                st.markdown("This process may take a couple minutes. Please be patient and **do not press x**.")
                 # ask the AI to generate a summary 
                 client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
                 generate_message = [{'role': 'user', 'content': self.generate_summary_prompt}]
