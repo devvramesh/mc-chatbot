@@ -384,10 +384,11 @@ class StreamlitGUI:
         Creates a pop up dialog that shows a loading spinner and then displays a download button 
         """
         self.log("warning", "Generating summary document", st.session_state.to_dict())
+        message = st.empty() 
         # start the loading spinner and show the time elapsed so far 
         with st.spinner("Generating document", show_time=True):
             try: 
-                st.markdown("This process may take a couple minutes. Please be patient and **do not press x**.")
+                message.markdown("This process may take a couple minutes. Please be patient and **do not press x**.")
                 # ask the AI to generate a summary 
                 client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
                 generate_message = [{'role': 'user', 'content': self.generate_summary_prompt}]
@@ -417,21 +418,6 @@ class StreamlitGUI:
                 doc.add_heading("Summary", 1) 
                 doc.add_paragraph(summary)
 
-                # add section for the transcript 
-                doc.add_heading("Interview Transcript", 1)
-                for message in st.session_state.gui_message_history: 
-                    # first bold the role 
-                    p = doc.add_paragraph() 
-                    role_run = p.add_run(f"{message['role'].title()}: ")
-                    role_run.bold = True 
-
-                    # now add the message 
-                    content_run = p.add_run(message['content']) 
-
-                    # italicize the assistant messages 
-                    if message['role'] == 'assistant': 
-                        content_run.italic = True 
-
                 # save the document into BytesIO 
                 doc_bytes = BytesIO() 
                 doc.save(doc_bytes) 
@@ -446,7 +432,7 @@ class StreamlitGUI:
         thread.start() 
 
         # display download button 
-        st.markdown("To download the summary document, click download below")
+        message.markdown("To download the summary document, click download below")
         st.download_button(
             label='Download document', 
             help='Download interview summary document', 
