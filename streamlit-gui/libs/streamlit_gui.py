@@ -384,10 +384,10 @@ class StreamlitGUI:
         Creates a pop up dialog that shows a loading spinner and then displays a download button 
         """
         self.log("warning", "Generating summary document", st.session_state.to_dict())
-        message = st.empty() 
         # start the loading spinner and show the time elapsed so far 
         with st.spinner("Generating document", show_time=True):
             try: 
+                message = st.empty() 
                 message.markdown("This process may take a couple minutes. Please be patient and **do not press x**.")
                 # ask the AI to generate a summary 
                 client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
