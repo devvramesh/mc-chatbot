@@ -211,14 +211,15 @@ The final report should maintain a professional and structured format to help bo
 INTERVIEW_INSTRUCTIONS = """
 This AI tool has been designed to help you structure your evaluation of the paper. Here are some instructions for using the bot: 
 
-- When you start the conversation, the AI will ask you to provide a brief summary of your overall impression in under two minutes.
-- Answer naturally and thoughtfully. The tool will guide you by focusing on one theme at a time and asking follow-up questions to ensure a deep exploration of each aspect.
+- When you start the conversation, the *Interviewer Agent* will ask you to provide a brief summary of your overall impression in under two minutes.
+- Answer naturally and thoughtfully. The tool will guide you by focusing on one theme at a time and asking follow-up questions, when needed, if more clarifications are warranted. 
 - Only move to a new theme when you indicate you're ready, so take your time to fully explore each topic.
-- If you want to finish your current conversation, click the "Quit" button on the left sidebar. Note that quitting preserves your progress for the final report, but you cannot continue the discussion afterwards.
-- If you wish to start over completely, click the "Restart" (or "Quit" then "Restart") button, and this will reset the entire conversation.
 - Once you feel you've covered everything you wanted to address, simply click the "Generate" button on the left sidebar to compile your chat into a structured summary of your referee report and conversation with the AI interviewer. *Document generation may take a few minutes. Please be patient and **do not press x**.*
-- Please note that all interactions are saved **only for this session**. **Refreshing or closing the window may delete your progress**, so be sure to click the "Generate" button once you've covered everything to compile your chat into a structured draft of your referee report.
-- If an error occurs, an error message will be displayed. Click the "Try again" button to clear the error state; however, this button does not automatically repeat your last action. You must manually reattempt the action after clicking "Try again." If you continue to experience issues, please email your instructor for assistance.
+- You can always choose to continue the conversation and ask to generate another more updated form. Feel free to experiment with the conversation until you are satisfied with the final output. 
+- If you want to finish your current conversation, click the "Quit" button on the left sidebar. Note that quitting preserves your conversation history for the final report, but you will not be able to continue with the current conversation afterwards.
+- If you wish to start over completely, click the "Restart" (or "Quit" then "Restart") button. This will allow starting an entirely new conversation with the Interviewer Agent. 
+- **Refreshing or closing the window may delete your progress**, so be sure to click the "Generate" button once you've covered everything to compile your chat into a structured draft of your referee report.
+- If an error message is displayed - click the "Try again" button to clear the error state. However, this button does not automatically repeat your last action. You must manually reattempt the action after clicking "Try again." If you continue to experience issues, please email your instructor for assistance.
 
 Remember, the goal of this interaction is to help you build a well-organized and insightful evaluation that you can refine into your final report. Enjoy the conversation and let it guide you to a comprehensive review of the paper!
 """
