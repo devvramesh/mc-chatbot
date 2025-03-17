@@ -209,14 +209,7 @@ The final report should maintain a professional and structured format to help bo
 """
 
 INTERVIEW_INSTRUCTIONS = """
-This AI tool has been designed to help you structure your evaluation of the paper. The goal is to have a casual and thoughtful conversation with the AI interviewer to express your opinions about the paper rather than copying and pasting your report into the chat. Identify the key points you want to make based on the following structure:
-
-- **Recommendation:** Clearly state whether you recommend acceptance, rejection, or revision, and briefly justify your decision. 
-- **Critical Review of the Paper:** Assess the paper's significance, clarity, originality, and alignment with relevant literature. 
-- **Analysis — Main Body of the Comments:** Discuss specific aspects such as theoretical framing, methodology, data quality, robustness of results, and the strength of the argument.
-- **Minor Comments:** Note smaller issues such as unclear phrasing, missing citations, or minor technical errors.
-
-Here are some instructions for using the bot: 
+This AI tool has been designed to help you structure your evaluation of the paper. Here are some instructions for using the bot: 
 
 - When you start the conversation, the AI will ask you to provide a brief summary of your overall impression in under two minutes.
 - Answer naturally and thoughtfully. The tool will guide you by focusing on one theme at a time and asking follow-up questions to ensure a deep exploration of each aspect.
