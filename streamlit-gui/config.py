@@ -215,13 +215,15 @@ This AI tool has been designed to help you structure your evaluation of the pape
 - Answer naturally and thoughtfully. The tool will guide you by focusing on one theme at a time and asking follow-up questions, when needed, if more clarifications are warranted. 
 - Only move to a new theme when you indicate you're ready, so take your time to fully explore each topic.
 - Once you feel you've covered everything you wanted to address, simply click the "Generate" button on the left sidebar to compile your chat into a structured summary of your referee report and conversation with the AI interviewer. *Document generation may take a few minutes. Please be patient and **do not press x**.*
+
+Remember, the goal of this interaction is to help you build a well-organized and insightful evaluation that you can refine into your final report. Enjoy the conversation and let it guide you to a comprehensive review of the paper!
+
+## Conversation Tips 
 - You can always choose to continue the conversation and ask to generate another more updated form. Feel free to experiment with the conversation until you are satisfied with the final output. 
 - If you want to finish your current conversation, click the "Quit" button on the left sidebar. Note that quitting preserves your conversation history for the final report, but you will not be able to continue with the current conversation afterwards.
 - If you wish to start over completely, click the "Restart" (or "Quit" then "Restart") button. This will allow starting an entirely new conversation with the Interviewer Agent. 
 - **Refreshing or closing the window may delete your progress**, so be sure to click the "Generate" button once you've covered everything to compile your chat into a structured draft of your referee report.
-- If an error message is displayed - click the "Try again" button to clear the error state. However, this button does not automatically repeat your last action. You must manually reattempt the action after clicking "Try again." If you continue to experience issues, please email your instructor for assistance.
-
-Remember, the goal of this interaction is to help you build a well-organized and insightful evaluation that you can refine into your final report. Enjoy the conversation and let it guide you to a comprehensive review of the paper!
+- If an error message is displayed — click the "Try again" button or "x" to clear the error state. However, this button does not automatically repeat your last action. You must manually reattempt the action after clicking "Try again." If you continue to experience issues, please email your instructor for assistance.
 """
 
 
