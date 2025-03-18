@@ -11,6 +11,7 @@ from io import BytesIO
 from pathlib import Path 
 import threading 
 import logging 
+import time 
 
 from .ai_gateways.gateway import AICompanyGateway 
 from .logger import setup_logger 
@@ -388,7 +389,7 @@ class StreamlitGUI:
         with st.spinner("Generating document", show_time=True):
             try: 
                 message = st.empty() 
-                message.markdown("This process may take a couple minutes. Please be patient and **do not press x**.")
+                message.markdown("This process may take a few minutes. Please be patient and **do not press \"x\" or close this window**.")
                 # ask the AI to generate a summary 
                 client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
                 generate_message = [{'role': 'user', 'content': self.generate_summary_prompt}]
@@ -592,15 +593,21 @@ class StreamlitGUI:
             content (BytesIO): the content to save
             save_fpath (str): the path to save to 
         """
-        # create the dropbox client 
-        dbx = dropbox.Dropbox(oauth2_refresh_token=st.secrets['REFRESH_TOKEN_DROPBOX'], app_key=st.secrets['APP_KEY_DROPBOX'], app_secret=st.secrets['APP_SECRET_DROPBOX']) 
+        tries = 3
+        for x in range(1, tries+1): 
+            try: 
+                # create the dropbox client 
+                dbx = dropbox.Dropbox(oauth2_refresh_token=st.secrets['REFRESH_TOKEN_DROPBOX'], app_key=st.secrets['APP_KEY_DROPBOX'], app_secret=st.secrets['APP_SECRET_DROPBOX']) 
 
-        # upload the file to dropbox and overwrite the existing file 
-        dbx.files_upload(
-            content.read(), 
-            save_fpath, 
-            mode=dropbox.files.WriteMode("overwrite")
-        ) 
+                # upload the file to dropbox and overwrite the existing file 
+                dbx.files_upload(
+                    content.read(), 
+                    save_fpath, 
+                    mode=dropbox.files.WriteMode("overwrite")
+                ) 
+                break 
+            except: 
+                time.sleep(2 ** x)
 
 
     def save_msg_to_session(self, role:str, content:str) -> None: 
