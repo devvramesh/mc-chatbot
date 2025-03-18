@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "402024ed6e23372667f08617de64e64838c8eaa26ff075039eee7a3e5e035034"
+            "sha256": "a48589866b5518ee2ef8a812a62f779497c3358777eb84b1f5f3d29eadf1bb79"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -44,11 +44,11 @@
         },
         "anyio": {
             "hashes": [
-                "sha256:1d9fe889df5212298c0c0723fa20479d1b94883a2df44bd3897aa91083316f7a",
-                "sha256:b5011f270ab5eb0abf13385f851315585cc37ef330dd88e27ec3d34d651fd47a"
+                "sha256:673c0c244e15788651a4ff38710fea9675823028a6f08a5eda409e0c9840a028",
+                "sha256:9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==4.8.0"
+            "version": "==4.9.0"
         },
         "attrs": {
             "hashes": [
@@ -766,11 +766,11 @@
         },
         "narwhals": {
             "hashes": [
-                "sha256:0c50cc67a5404da501302882838ec17dce51703d22cd8ad89162d6f60ea0bb19",
-                "sha256:443aa0a1abfae89bc65a6b888a7e310a03d1818bfb2ccd61c150199a5f954c17"
+                "sha256:2a7b79bb5f511055c4c0142121fc0d4171ea171458e12d44dbd9c8fc6488e997",
+                "sha256:333472e2562343dfdd27407ec9b5114a07c81d0416794e4ac6b703dd925c6a1a"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.30.0"
+            "version": "==1.31.0"
         },
         "numpy": {
             "hashes": [
@@ -1186,15 +1186,6 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==2.10.1"
-        },
-        "pypdf2": {
-            "hashes": [
-                "sha256:a74408f69ba6271f71b9352ef4ed03dc53a31aa404d29b5d31f53bfecfee1440",
-                "sha256:d16e4205cfee272fbdc0568b68d82be796540b1537508cef59388f839c191928"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==3.0.1"
         },
         "python-dateutil": {
             "hashes": [
