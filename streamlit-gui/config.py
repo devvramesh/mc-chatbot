@@ -220,19 +220,18 @@ The final report should maintain a professional and structured format to help bo
 INTERVIEW_INSTRUCTIONS = """
 This AI tool has been designed to help you structure your evaluation of the paper. Here are some instructions for using the bot: 
 
-- When you start the conversation, the *Interviewer Agent* will ask you to provide a brief summary of your overall impression in under two minutes.
-- Answer naturally and thoughtfully. The tool will guide you by focusing on one theme at a time and asking follow-up questions, when needed, if more clarifications are warranted. 
-- Only move to a new theme when you indicate you're ready, so take your time to fully explore each topic.
-- Once you feel you've covered everything you wanted to address, simply click the "Generate" button on the left sidebar to compile your chat into a structured summary of your referee report and conversation with the AI interviewer. *Document generation may take a few minutes. Please be patient and **do not press x**.*
+- The Interviewer Agent will first ask for a brief summary of your overall impression.
+- Answer naturally; the tool will guide the conversation by focusing on one theme at a time and asking follow-up questions when needed.
+- Move on to a new theme only when you indicate you are ready.
+- When finished, click **"Generate"** on the left sidebar to compile your conversation into a structured referee report. This may take a few minutes—please wait without pressing "X".
+- Fill out the [survey](https://hbs.qualtrics.com/jfe/form/SV_3pG35YeO7mjPItE) after completing your draft.
 
-Remember, the goal of this interaction is to help you build a well-organized and insightful evaluation that you can refine into your final report. Enjoy the conversation and let it guide you to a comprehensive review of the paper!
-
-## Conversation Tips 
-- You can always choose to continue the conversation and ask to generate another more updated form. Feel free to experiment with the conversation until you are satisfied with the final output. 
-- If you want to finish your current conversation, click the "Quit" button on the left sidebar. Note that quitting preserves your conversation history for the final report, but you will not be able to continue with the current conversation afterwards.
-- If you wish to start over completely, click the "Restart" (or "Quit" then "Restart") button. This will allow starting an entirely new conversation with the Interviewer Agent. 
-- **Refreshing or closing the window may delete your progress**, so be sure to click the "Generate" button once you've covered everything to compile your chat into a structured draft of your referee report.
-- If an error message is displayed — click the "Try again" button or "x" to clear the error state. However, this button does not automatically repeat your last action. You must manually reattempt the action after clicking "Try again." If you continue to experience issues, please email your instructor for assistance.
+**Additional Features** 
+- Click **"Quit"** to preserve your conversation history but end the session.
+- Click **"Restart"** to start a new conversation from scratch.
+- Avoid refreshing or closing the window before generating the report to prevent losing progress.
+- If an error occurs, click **"Try again"** and manually reattempt the last action. If issues persist, email Miaomiao at mzhang@hbs.edu.
+- Please note: Streamlit keeps a log of all your conversations once sessions start.
 """
 
 

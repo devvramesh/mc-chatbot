@@ -294,7 +294,7 @@ class StreamlitGUI:
             st.session_state.quit_button_hit = False 
 
         with self.error_container: 
-            st.error("An error occurred. Please try again or contact your course instructor.")
+            st.error("An error occurred. Please try again or contact Miaomiao at mzhang@hbs.edu.")
             st.button("Try again", on_click=try_again)
 
         # set the interview state to False as it's over 
