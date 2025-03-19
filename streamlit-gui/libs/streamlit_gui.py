@@ -475,6 +475,7 @@ class StreamlitGUI:
             stream (Generator): the generator that contains the messages being streamed 
         """ 
         self.log("warning", "Streaming message", st.session_state.to_dict())
+        streaming_first_msg = not st.session_state.gui_message_history 
         try: 
             with self.chat_container: 
                 # stream messages within the chat container
@@ -512,8 +513,9 @@ class StreamlitGUI:
                     self.save_msg_to_session('assistant', final_msg)
 
                     # save the transcript to dropbox 
-                    thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
-                    thread.start() 
+                    if not streaming_first_msg: 
+                        thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
+                        thread.start() 
         except Exception as e: 
             st.session_state.reached_error = True 
             self.log("error", f"Error streaming message from AI: {e}", st.session_state.to_dict())
