@@ -75,7 +75,7 @@ class StreamlitGUI:
             st.title(self.page_title) 
         self.setup_session_vars() 
         self.display_login_page() 
-        self.display_instructions_button() 
+        self.display_instructions_expander() 
         self.display_quit_interview_button() 
         self.display_restart_interview_button()
         self.display_generate_summary_button() 
@@ -188,17 +188,12 @@ class StreamlitGUI:
                     self.authenticator.logout(callback=self.on_logout) 
 
 
-    def display_instructions_button(self) -> None: 
-        """Shows the instructions button"""
+    def display_instructions_expander(self) -> None: 
+        """Shows the instructions expander"""
         if not st.session_state.show_login_form: 
             with st.sidebar: 
-                st.markdown("To view the instructions for the assignment and the AI interviewer, click instructions below")
-                st.button(
-                    label="Instructions", 
-                    key='instructions', 
-                    help='View instructions', 
-                    on_click=self.display_instructions
-                )
+                with st.expander("See instructions"): 
+                    st.markdown(self.interview_instructions)
 
 
     @st.dialog("AI Referee Report Guide", width='large')
