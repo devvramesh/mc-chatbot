@@ -191,7 +191,7 @@ class StreamlitGUI:
     def display_instructions_expander(self) -> None: 
         """Shows the instructions expander"""
         if not st.session_state.show_login_form: 
-            with st.sidebar: 
+            with self.header_container: 
                 with st.expander("See instructions"): 
                     st.markdown(self.interview_instructions)
 
