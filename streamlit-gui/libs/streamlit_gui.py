@@ -6,12 +6,13 @@ import yaml
 from typing import Dict, Generator, Tuple 
 import dropbox 
 import pandas as pd 
-from docx import Document
+import pypandoc 
 from io import BytesIO
 from pathlib import Path 
 import threading 
 import logging 
 import time 
+import tempfile 
 
 from .ai_gateways.gateway import AICompanyGateway 
 from .logger import setup_logger 
@@ -403,21 +404,26 @@ class StreamlitGUI:
                 return 
 
             try: 
-                # start the word document 
-                doc = Document() 
-                # add a title 
-                doc.add_heading("Interview Summary", 0) 
-                # add some details about the report 
-                doc.add_paragraph(f"Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}")
+                # add the title to the top 
+                summary = f"# Interview Summary\n\nGenerated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}\n\n" + summary 
 
-                # add section for the summary 
-                doc.add_heading("Summary", 1) 
-                doc.add_paragraph(summary)
+                # convert the markdown into word doc 
+                with tempfile.NamedTemporaryFile(suffix=".docx", delete=True) as tmp_file: 
+                    temp_path = tmp_file.name 
 
-                # save the document into BytesIO 
-                doc_bytes = BytesIO() 
-                doc.save(doc_bytes) 
-                doc_bytes.seek(0) 
+                    pypandoc.convert_text(
+                        source=summary,
+                        to="docx",
+                        format="md",
+                        outputfile=temp_path 
+                    )
+
+                    # read in the bytes 
+                    with open(temp_path, "rb") as f: 
+                        doc_content = f.read() 
+
+                    doc_bytes = BytesIO(doc_content) 
+
             except Exception as e: 
                 st.session_state.reached_error = True 
                 self.log("error", f"Error creating docx document: {e}", st.session_state.to_dict())
