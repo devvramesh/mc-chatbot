@@ -190,7 +190,7 @@ The final report should maintain a professional and structured format to help bo
 INTERVIEW_INSTRUCTIONS = """
 This AI tool has been designed to help you structure your evaluation of the paper. Here are some instructions for using the bot: 
 
-- The Interviewer Agent will first ask for a brief summary of your overall impression.
+- The Interviewer Agent will first ask for a brief summary of the paper and then a brief summary of your first impression. 
 - Answer naturally; the tool will guide the conversation by focusing on one theme at a time and asking follow-up questions when needed.
 - Move on to a new theme only when you indicate you are ready.
 - When finished, click **"Generate"** on the left sidebar to compile your conversation into a structured referee report. This may take a few minutes—please wait without pressing "X".
