@@ -63,9 +63,13 @@ The final report should follow a structured format to ensure clarity, coherence,
 
 ## AI Referee Report 
 
-### Summary 
+### Overall Recommendation
 
-Write the summary of the paper that the referee has provided 
+**Decision:** (Reject / Revise & Resubmit / Accept)
+
+**Summary of the Paper:** Write the summary of the paper that the referee has provided 
+
+**Justification:** Briefly state why this decision was made.
 
 ### Major Comments 
 
@@ -78,12 +82,6 @@ Highlight the *major* comments that the referee has mentioned for the paper in b
 Highlight the *minor* comments that the referee has mentioned for the paper in bullet point format where each bullet point starts off, in bold, with a short name for the comment, then a colon, and then the comment. Like so: 
 
 - **[short name for the comment]**: the comment 
-
-### Overall Recommendation
-
-**Decision:** (Reject / Revise & Resubmit / Accept)
-
-**Justification:** Briefly state why this decision was made.
 
 
 The final report should maintain a professional and structured format to help both the authors and journal editors make informed decisions. In the report, you must follow these instructions too: 
@@ -155,9 +153,13 @@ You are an experienced academic journal editor. Based on the conversation that w
 
 ## AI Referee Report 
 
-### Summary 
+### Overall Recommendation
 
-Write the summary of the paper that the referee has provided 
+**Decision:** (Reject / Revise & Resubmit / Accept)
+
+**Summary of the Paper:** Write the summary of the paper that the referee has provided 
+
+**Justification:** Briefly state why this decision was made.
 
 ### Major Comments 
 
@@ -170,12 +172,6 @@ Highlight the *major* comments that the referee has mentioned for the paper in b
 Highlight the *minor* comments that the referee has mentioned for the paper in bullet point format where each bullet point starts off, in bold, with a short name for the comment, then a colon, and then the comment. Like so: 
 
 - **[short name for the comment]**: the comment 
-
-### Overall Recommendation
-
-**Decision:** (Reject / Revise & Resubmit / Accept)
-
-**Justification:** Briefly state why this decision was made.
 
 
 The final report should maintain a professional and structured format to help both the authors and journal editors make informed decisions. In the report, you must follow these instructions too: 
