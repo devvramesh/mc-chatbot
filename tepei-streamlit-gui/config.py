@@ -224,7 +224,7 @@ DROPBOX_PATH = "/AI interviewer/Referee Report Guide/interviews-main-referee/dat
 
 # Page info
 PAGE_TITLE = "TEPEI 2025 AI Interviewer"
-PAGE_ICON = "./streamlit-gui/resources/hbs_page_icon.png"
+PAGE_ICON = "./tepei-streamlit-gui/resources/hbs_page_icon.png"
 
 
 # Avatars displayed in the chat interface
