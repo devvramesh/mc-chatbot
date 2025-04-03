@@ -1,6 +1,6 @@
 # Streamlit GUI for AI Interviewer 
 
-The code in this folder is used to create the GUI on Streamlit for the AI interviewer. To run the app and see the GUI, you need to first activate the virtual environment by running `pipenv shell` on the command line. Then you can run `streamlit run streamlit-gui/app.py` to get the Streamli GUI started. It should automatically open on your browser. 
+The code in this folder is used to create the GUI on Streamlit for the AI interviewer for the TEPEI 2025 PhD class at HBS. To run the app and see the GUI, you need to first activate the virtual environment by running `pipenv shell` on the command line. Then you can run `streamlit run streamlit-gui/app.py` to get the Streamli GUI started. It should automatically open on your browser. 
 
 ## Code structure 
 
