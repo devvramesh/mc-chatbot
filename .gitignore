@@ -75,4 +75,4 @@ logs/
 ### Streamlit ### 
 */.streamlit/secrets.toml 
 .streamlit/secrets.toml 
-streamlit-gui/streamlit_authentication/*
+tepei-streamlit-gui/streamlit_authentication/*
