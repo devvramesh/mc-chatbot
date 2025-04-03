@@ -80,3 +80,6 @@ logs/
 tepei-streamlit-gui/streamlit_authentication/*
 tepei-assessment/data 
 tepei-assessment/output
+
+### VentureLAB stuff ### 
+venturelab-evaluation-streamlit-gui/streamlit_authentication/*
