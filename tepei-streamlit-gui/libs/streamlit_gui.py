@@ -3,7 +3,7 @@ import streamlit_authenticator as stauth
 from datetime import datetime, timezone 
 import hashlib 
 import yaml 
-from typing import Dict, Generator, Tuple 
+from typing import Dict, Generator, Tuple, List 
 import dropbox 
 import pandas as pd 
 import pypandoc 
@@ -13,6 +13,7 @@ import threading
 import logging 
 import time 
 import tempfile 
+import base64 
 
 from .ai_gateways.gateway import AICompanyGateway 
 from .logger import setup_logger 
@@ -66,6 +67,8 @@ class StreamlitGUI:
         # create some containers for the header (where the title will live) and for the chat (where chat history will live) 
         self.header_container = st.container() 
         self.error_container = st.container() 
+        self.instructions_container = st.container() 
+        self.file_upload_container = st.container() 
         self.chat_container = st.container() 
 
 
@@ -77,7 +80,7 @@ class StreamlitGUI:
         self.setup_session_vars() 
         self.display_login_page() 
         self.display_instructions_expander() 
-        self.display_quit_interview_button() 
+        self.display_file_uploader() 
         self.display_restart_interview_button()
         self.display_generate_summary_button() 
         self.display_user_input() 
@@ -92,10 +95,9 @@ class StreamlitGUI:
         else: 
             if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
                 self.display_instructions()
+                st.session_state.first_instructions_shown = True 
             if st.session_state.interview_status: 
                 self.stream_initial_message()  
-            if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
-                st.session_state.first_instructions_shown = True 
 
 
     # --------------------------------------------------------------------------
@@ -106,7 +108,7 @@ class StreamlitGUI:
     def setup_session_vars(self) -> None: 
         """Sets up the session vars
 
-        Initializes any vars that haven't been initialized yet 
+        Initializes any session variables that haven't been initialized yet 
         """
         if not self.auth_required: 
             # since we're not doing logins set these session vars to defaults
@@ -125,8 +127,6 @@ class StreamlitGUI:
         if "transcript_history" not in st.session_state: 
             # will store the transcript history of the conversation so far
             st.session_state.transcript_history = [] 
-            # will store the messages to display on the screen 
-            st.session_state.gui_message_history = [] 
 
         if 'session_id' not in st.session_state and 'username' in st.session_state: 
             # store the start time of the interview 
@@ -136,13 +136,27 @@ class StreamlitGUI:
             data = f"{st.session_state.username}+{st.session_state.start_time}"
             st.session_state.session_id = hashlib.sha256(data.encode()).hexdigest() 
 
-        if 'quit_button_hit' not in st.session_state: 
-            # flag for whether the quit button has been hit or not 
-            st.session_state.quit_button_hit = False 
-
         if 'first_instructions_shown' not in st.session_state: 
             # flag for whether the instructions have been shown for the first time or not 
             st.session_state.first_instructions_shown = False 
+
+        if 'show_confirm_restart' not in st.session_state: 
+            # flag for whether to show a confirm restart message
+            st.session_state.show_confirm_restart = False 
+            st.session_state.show_confirm_restart_time = 0 
+        else: 
+            if st.session_state.show_confirm_restart: 
+                if time.time() - st.session_state.show_confirm_restart_time > 20: 
+                    # if it's been more than a minute since the confirm has been shown, turn it back to original 
+                    st.session_state.show_confirm_restart = False 
+
+        if 'found_closing_msg' not in st.session_state: 
+            # flag for whether the AI outputted a closing message 
+            st.session_state.found_closing_msg = False 
+
+        if 'uploaded_paper' not in st.session_state: 
+            # object to store the uploaded paper 
+            st.session_state.uploaded_paper = None 
 
         if 'reached_error' not in st.session_state: 
             # flag for whether we reached an error or not 
@@ -182,9 +196,7 @@ class StreamlitGUI:
                 with st.sidebar: 
                     # welcome the user 
                     st.write(f"# Welcome {st.session_state.get('name')}")
-                    if not st.session_state.quit_button_hit: 
-                        # unless we are in quit button hit status, start the interview
-                        st.session_state.interview_status = True 
+                    st.session_state.interview_status = True 
                     # add logout button that runs self.on_logout when hit 
                     self.authenticator.logout(callback=self.on_logout) 
 
@@ -192,7 +204,7 @@ class StreamlitGUI:
     def display_instructions_expander(self) -> None: 
         """Shows the instructions expander"""
         if not st.session_state.show_login_form: 
-            with self.header_container: 
+            with self.instructions_container: 
                 with st.expander("See instructions"): 
                     st.markdown(self.interview_instructions)
 
@@ -203,46 +215,54 @@ class StreamlitGUI:
         st.markdown(self.interview_instructions)
 
 
-    def display_quit_interview_button(self) -> None: 
-        """Displays the quit interview button"""
-        if st.session_state.interview_status: 
-            # Add 'Quit' button to the side bar 
-            with st.sidebar: 
-                st.markdown("To end the interview, click quit below")
-                # add the button and runs self.on_quit_button when hit 
-                st.button(
-                    label="Quit", 
-                    key='quit', 
-                    help='End the interview', 
-                    on_click=self.on_quit_button
+    def display_file_uploader(self) -> None: 
+        """Displays the file upload section"""
+        if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error: 
+            with self.file_upload_container: 
+                # add option to upload one pdf here 
+                st.file_uploader(
+                    label="Upload the paper here", 
+                    type="pdf", 
+                    on_change=self.on_file_upload,
+                    key='file_uploader',
+                    help="Upload a pdf of the paper here"
                 )
 
 
     def display_restart_interview_button(self) -> None: 
-        """Displays the restart interview when the quit button is hit"""
-        if st.session_state.quit_button_hit and not st.session_state.interview_status and not st.session_state.show_login_form: 
-            # Only show the restart button if the quit button has been hit, interview is no longer active, and we are not showing the login page
+        """Displays the restart interview"""
+        if not st.session_state.show_login_form: 
+            # add 'Restart' button to the side bar
             with st.sidebar: 
-                st.markdown("To restart the interview from scratch, click restart below")
-                # add the button and runs self.on_restart_button when hit 
-                st.button(
-                    label="Restart", 
-                    key='restart', 
-                    help='Restart the interview', 
-                    on_click=self.on_restart_button
-                )
+                if st.session_state.show_confirm_restart: 
+                    # show confirmation message 
+                    st.markdown("**Are you sure you want to restart?**\nYou will be starting the conversation from scratch")
+                    # add the button and runs self.on_restart_button when hit 
+                    st.button(
+                        label="**Confirm**", 
+                        help='Confirm restarting the interview', 
+                        on_click=self.on_restart_button, 
+                        type='primary'
+                    )
+                else: 
+                    st.markdown("To restart the interview from scratch, click restart below")
+                    # add the button and runs self.on_restart_button when hit 
+                    st.button(
+                        label="Restart", 
+                        help='Restart the interview', 
+                        on_click=self.on_restart_button
+                    )
 
 
     def display_generate_summary_button(self) -> None: 
         """Displays the generate summary button"""
-        if not st.session_state.show_login_form and not st.session_state.reached_error: 
+        if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error: 
             # button is always displayed unless we are in the login page to allow people to generate the document at any time 
             with st.sidebar: 
                 st.markdown("To generate a summary document of the interview, click generate below") 
                 # add the button and runs self.on_generate_summary_button when hit 
                 st.button(
                     label="Generate", 
-                    key='Generate', 
                     help='Generate summary of the interview', 
                     on_click=self.on_generate_summary_button
                 )
@@ -253,7 +273,7 @@ class StreamlitGUI:
         if not st.session_state.show_login_form: 
             # always show the message history unless we are showing the login page 
             with self.chat_container: 
-                for message in st.session_state.gui_message_history: 
+                for message in st.session_state.transcript_history: 
                     # first set the avatar 
                     if message['role'] == 'assistant': 
                         avatar = self.interviewer_avatar 
@@ -267,8 +287,8 @@ class StreamlitGUI:
 
     def display_user_input(self) -> None: 
         """Display the user input """
-        if st.session_state.interview_status and not st.session_state.quit_button_hit and not st.session_state.reached_error: 
-            # only display the user input section if the interview is active and the quit button hasn't been hit 
+        if st.session_state.interview_status and not st.session_state.reached_error and not st.session_state.found_closing_msg: 
+            # only display the user input section if the interview is active 
             # display the input section and runs self.on_user_input_submit when text submitted 
             st.chat_input(
                 placeholder="Your message here", 
@@ -286,8 +306,6 @@ class StreamlitGUI:
             st.session_state.reached_error = False 
             # return back to interview status 
             st.session_state.interview_status = True 
-            # return to no quit button 
-            st.session_state.quit_button_hit = False 
 
         with self.error_container: 
             st.error("An error occurred. Please try again or contact Miaomiao at mzhang@hbs.edu.")
@@ -295,8 +313,6 @@ class StreamlitGUI:
 
         # set the interview state to False as it's over 
         st.session_state.interview_status = False 
-        # set the quit button to true 
-        st.session_state.quit_button_hit = True 
 
 
     # --------------------------------------------------------------------------
@@ -312,15 +328,13 @@ class StreamlitGUI:
         st.session_state.interview_status = False 
         # show the login form 
         st.session_state.show_login_form = True
-        # reset quit button hit 
-        st.session_state.quit_button_hit = False
         # reset instructions flag 
         st.session_state.first_instructions_shown = False 
         # reset reached error 
         st.session_state.reached_error = False 
 
         # remove any other session variable to start over 
-        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id', 'log', 'log_stream']: 
+        for key in ['transcript_history', 'start_time', 'session_id', 'log', 'log_stream', 'show_confirm_restart', 'found_closing_msg', 'uploaded_paper']: 
             if key in st.session_state:
                 del st.session_state[key]
 
@@ -347,31 +361,33 @@ class StreamlitGUI:
 
             # get the response from the AI bot and stream the message 
             client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
-            stream = client.stream_message(model=self.ai_model, messages=st.session_state.gui_message_history.copy(), max_tokens=self.max_tokens, system_message=self.system_message)
+            stream = client.stream_message(model=self.ai_model, messages=self.get_messages_for_ai(), max_tokens=self.max_tokens, system_message=self.system_message)
             self.stream_message(stream) 
         except Exception as e: 
-            st.session_state.gui_message_history = st.session_state.gui_message_history[:-1] 
             st.session_state.transcript_history = st.session_state.transcript_history[:-1] 
             st.session_state.reached_error = True 
             self.log("error", f"Error processing user input: {e}", st.session_state.to_dict())
 
 
-    def on_quit_button(self) -> None: 
-        """Function that runs when the quit button is hit"""
-        # set the interview state to False as it's over 
-        st.session_state.interview_status = False 
+    def on_file_upload(self) -> None: 
+        """Function that runs when a file is uploaded
 
-        # save a message to the session that the interview is over 
-        self.save_msg_to_session('assistant', "You have cancelled the interview.")
+        The function will read the file as base64, and then save it to dropbox
+        """
+        try: 
+            uploaded_file = st.session_state.file_uploader
+            if uploaded_file: 
+                self.log("warning", f"Uploaded file {uploaded_file.name}", st.session_state.to_dict())
+                # save the base64 so that we can use it in the API 
+                st.session_state.uploaded_paper = base64.b64encode(uploaded_file.getvalue()).decode('utf-8') 
 
-        # save transcript to dropbox 
-        thread = threading.Thread(target=self.save_transcript_to_dropbox, args=(st.session_state.to_dict(),)) 
-        thread.start() 
-
-        # set the quit button to true 
-        st.session_state.quit_button_hit = True 
-
-        self.log("warning", "Quit interview", st.session_state.to_dict())
+                # also save the document to dropbox so that we can know what was uploaded 
+                doc_bytes = BytesIO(uploaded_file.read())
+                thread = threading.Thread(target=self.save_file_upload_to_dropbox, args=(st.session_state.to_dict(), uploaded_file.name, doc_bytes)) 
+                thread.start() 
+        except Exception as e: 
+            st.session_state.reached_error = True 
+            self.log('error', f"Error processing file upload: {e}", st.session_state.to_dict())
 
 
     @st.dialog("Interview Summary Document")
@@ -391,7 +407,7 @@ class StreamlitGUI:
                 generate_message = [{'role': 'user', 'content': self.generate_summary_prompt}]
                 summary = client.create_message(
                     model=self.ai_model, 
-                    messages=st.session_state.gui_message_history + generate_message, 
+                    messages=self.get_messages_for_ai() + generate_message, 
                     max_tokens=self.max_tokens, 
                     system_message=self.system_message 
                 )
@@ -448,20 +464,28 @@ class StreamlitGUI:
 
     def on_restart_button(self) -> None: 
         """Function that runs when the restart button is hit"""
-        self.log("warning", "Restarting interview", st.session_state.to_dict())
-        # reset some session state variables 
-        for key in ['transcript_history', 'gui_message_history', 'start_time', 'session_id', 'quit_button_hit', 'log', 'log_stream']: 
-            if key in st.session_state:
-                del st.session_state[key]
-        # restart the interview 
-        st.session_state.interview_status = True 
-        # reset reached error 
-        st.session_state.reached_error = False 
+        if st.session_state.show_confirm_restart: 
+            # if the user clicked confirm then restart
+            self.log("warning", "Restarting interview", st.session_state.to_dict())
+            # reset some session state variables 
+            for key in ['transcript_history', 'start_time', 'session_id', 'log', 'log_stream', 'show_confirm_restart', 'found_closing_msg', 'uploaded_paper']: 
+                if key in st.session_state:
+                    del st.session_state[key]
+            # restart the interview 
+            st.session_state.interview_status = True 
+            # reset reached error 
+            st.session_state.reached_error = False 
+            # reset to original restart button
+            st.session_state.show_confirm_restart = False 
+        else: 
+            # ask for confirmation 
+            st.session_state.show_confirm_restart = True 
+            st.session_state.show_confirm_restart_time = time.time() 
 
 
     def stream_initial_message(self) -> None: 
         """Streams the initial message from the AI"""
-        if not st.session_state.gui_message_history: 
+        if not st.session_state.transcript_history: 
             # no messages so far, stream initial message 
             self.log("warning", "Streaming initial message", st.session_state.to_dict())
             client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
@@ -476,7 +500,7 @@ class StreamlitGUI:
             stream (Generator): the generator that contains the messages being streamed 
         """ 
         self.log("warning", "Streaming message", st.session_state.to_dict())
-        streaming_first_msg = not st.session_state.gui_message_history 
+        streaming_first_msg = not st.session_state.transcript_history 
         try: 
             with self.chat_container: 
                 # stream messages within the chat container
@@ -500,7 +524,7 @@ class StreamlitGUI:
                         # we found a closing message, so display closing message and shut down the conversation 
                         final_msg = closing_msg
                         st.session_state.interview_status = False 
-                        st.session_state.quit_button_hit = True 
+                        st.session_state.found_closing_msg = True 
                     else: 
                         # did not find closing message, display the message sent 
                         final_msg = msg_so_far 
@@ -528,6 +552,13 @@ class StreamlitGUI:
 
 
     def log(self, level:str, message:str, session_state:Dict) -> None: 
+        """Logs messages to dropbox 
+
+        Args:
+            level (str): the level to log at 
+            message (str): the message to log 
+            session_state (Dict): the current session state 
+        """
         show_traceback = level.upper() == "ERROR"
         session_state["log_stream"].seek(0, 2) 
 
@@ -541,6 +572,12 @@ class StreamlitGUI:
 
 
     def save_log_to_dropbox(self, session_state:Dict, log_stream:BytesIO) -> None: 
+        """Saves logs to dropbox 
+
+        Args:
+            session_state (Dict): the current session state
+            log_stream (BytesIO): the log stream with all the log messages 
+        """
         save_fpath = Path(self.dropbox_path)/session_state['username']/f"log+{session_state['username']}+{session_state['session_id']}.log"
 
         content = log_stream.getvalue().encode("utf-8") 
@@ -587,6 +624,25 @@ class StreamlitGUI:
         self.save_to_dropbox(doc_content, str(save_fpath))
 
 
+    def save_file_upload_to_dropbox(self, session_state:Dict, file_name:str, doc_content:BytesIO) -> None: 
+        """Saves the uploaded PDF to dropbox 
+
+        Usually runs in a separate thread to not interrupt the main chatbot experience 
+
+        Args:
+            session_state (Dict): the current session state dict to reference inside the thread 
+            file_name (str): the name of the file
+            doc_content (BytesIO): the docx data to save 
+        """
+        # create the path to save to 
+        save_fpath = Path(self.dropbox_path)/session_state['username']/f"uploaded_file+{session_state['username']}+{session_state['session_id']}+{int(datetime.now(timezone.utc).timestamp())}+{file_name}"
+
+        self.log("warning", f"Saving uploaded PDF to dropbox to {save_fpath}", session_state)
+
+        # save the content to dropbox 
+        self.save_to_dropbox(doc_content, str(save_fpath))
+
+
     def save_to_dropbox(self, content:BytesIO, save_fpath:str) -> None: 
         """Saves some content to dropbox 
 
@@ -620,7 +676,6 @@ class StreamlitGUI:
             role (str): the role of the message sender
             content (str): the message sent 
         """
-        st.session_state.gui_message_history.append({'role': role, 'content': content})
         st.session_state.transcript_history.append({
             'time': datetime.now(timezone.utc).isoformat(timespec='milliseconds'), 
             'session_id': st.session_state.session_id, 
@@ -628,6 +683,41 @@ class StreamlitGUI:
             'role': role, 
             'content': content 
         })
+
+
+    def get_messages_for_ai(self) -> List[Dict[str, str]]: 
+        """Gets the messages for the AI from the transcript history 
+
+        Returns:
+            List[Dict[str, str]]: a list of dicts with the messages for the AI
+        """
+        messages = [] 
+        if st.session_state.uploaded_paper: 
+            if self.ai_company == 'anthropic': 
+                messages.append({
+                    'role': 'user', 
+                    'content': [
+                        {
+                            'type': 'document', 
+                            'source': {
+                                'type': 'base64', 
+                                'media_type': 'application/pdf', 
+                                'data': st.session_state.uploaded_paper
+                            }, 
+                            'cache_control': {'type': 'ephemeral'}
+                        }, 
+                        {
+                            'type': 'text', 
+                            'text': 'The paper that I am reviewing is attached to give you additional context as you help me with my referee report. You do not need to acknowledge receipt of this document.'
+                        }
+                    ]
+                })
+        for row in st.session_state.transcript_history: 
+            messages.append({
+                'role': row['role'], 
+                'content': row['content']
+            })
+        return messages 
 
 
     def check_closing_messages(self, msg:str) -> Tuple[bool, str]: 
