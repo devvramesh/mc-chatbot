@@ -13,6 +13,7 @@ if __name__ == "__main__":
         auth_required=config.LOGINS, 
         interviewer_avatar=config.AVATAR_INTERVIEWER,
         user_avatar=config.AVATAR_RESPONDENT, 
+        first_interviewer_message=config.FIRST_INTERVIEWER_MESSAGE,
         closing_messages=config.CLOSING_MESSAGES, 
         dropbox_path=config.DROPBOX_PATH, 
         interview_instructions=config.INTERVIEW_INSTRUCTIONS 

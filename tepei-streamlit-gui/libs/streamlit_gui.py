@@ -1,13 +1,16 @@
 import streamlit as st 
 import streamlit_authenticator as stauth 
-from datetime import datetime, timezone 
+from datetime import datetime
+import pytz 
 import hashlib 
 import yaml 
 from typing import Dict, Generator, Tuple, List 
 import dropbox 
+import dropbox.files 
 import pandas as pd 
 import pypandoc 
-from io import BytesIO
+import io 
+import csv 
 from pathlib import Path 
 import threading 
 import logging 
@@ -20,7 +23,7 @@ from .logger import setup_logger
 
 
 class StreamlitGUI: 
-    def __init__(self, page_title:str, page_icon:str, ai_company:str, ai_model:str, max_tokens:int, system_message:str, generate_summary_prompt:str, auth_required:bool, interviewer_avatar:str, user_avatar:str, closing_messages:Dict[str, str], dropbox_path:str, interview_instructions:str) -> None: 
+    def __init__(self, page_title:str, page_icon:str, ai_company:str, ai_model:str, max_tokens:int, system_message:str, generate_summary_prompt:str, auth_required:bool, interviewer_avatar:str, user_avatar:str, first_interviewer_message:str, closing_messages:Dict[str, str], dropbox_path:str, interview_instructions:str) -> None: 
         """Set up the object
 
         Args:
@@ -49,6 +52,7 @@ class StreamlitGUI:
         self.auth_required = auth_required 
         self.interviewer_avatar = interviewer_avatar
         self.user_avatar = user_avatar
+        self.first_interviewer_message = first_interviewer_message
         self.closing_messages = closing_messages 
         self.dropbox_path = dropbox_path 
         self.interview_instructions = interview_instructions
@@ -68,7 +72,8 @@ class StreamlitGUI:
         self.header_container = st.container() 
         self.error_container = st.container() 
         self.instructions_container = st.container() 
-        self.file_upload_container = st.container() 
+        self.paper_upload_container = st.container() 
+        self.uploaded_paper_container = st.container() 
         self.chat_container = st.container() 
 
 
@@ -76,11 +81,25 @@ class StreamlitGUI:
         """Sets up the components of the page"""
         # set the title of the page 
         with self.header_container: 
-            st.title(self.page_title) 
+            st.markdown("## " + self.page_title) 
+            # add some html code that hides the file uploader list from streamlit 
+            css = """
+                <style>
+                    div[data-testid="stFileUploaderFile"] {
+                        display: none;
+                    }
+                    div.st-emotion-cache-fis6aj.e17y52ym5 {
+                        display: none;
+                    }
+                </style>
+            """
+            st.markdown(css, unsafe_allow_html=True)
         self.setup_session_vars() 
         self.display_login_page() 
         self.display_instructions_expander() 
-        self.display_file_uploader() 
+        self.display_paper_uploader() 
+        self.display_uploaded_paper() 
+        self.display_load_past_session() 
         self.display_restart_interview_button()
         self.display_generate_summary_button() 
         self.display_user_input() 
@@ -95,9 +114,12 @@ class StreamlitGUI:
         else: 
             if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
                 self.display_instructions()
-                st.session_state.first_instructions_shown = True 
             if st.session_state.interview_status: 
-                self.stream_initial_message()  
+                self.stream_initial_message() 
+            if st.session_state.interview_status and not st.session_state.first_instructions_shown: 
+                time.sleep(1) 
+                # change flag so that the dialog doesn't show up anymore 
+                st.session_state.first_instructions_shown = True 
 
 
     # --------------------------------------------------------------------------
@@ -130,7 +152,7 @@ class StreamlitGUI:
 
         if 'session_id' not in st.session_state and 'username' in st.session_state: 
             # store the start time of the interview 
-            st.session_state.start_time = datetime.now(timezone.utc).timestamp() 
+            st.session_state.start_time = datetime.now(pytz.timezone('UTC')).timestamp() 
 
             # create and store the session ID of the interview 
             data = f"{st.session_state.username}+{st.session_state.start_time}"
@@ -154,9 +176,10 @@ class StreamlitGUI:
             # flag for whether the AI outputted a closing message 
             st.session_state.found_closing_msg = False 
 
-        if 'uploaded_paper' not in st.session_state: 
+        if 'uploaded_paper_content' not in st.session_state: 
             # object to store the uploaded paper 
-            st.session_state.uploaded_paper = None 
+            st.session_state.uploaded_paper_content = None 
+            st.session_state.uploaded_paper_name = None 
 
         if 'reached_error' not in st.session_state: 
             # flag for whether we reached an error or not 
@@ -215,18 +238,24 @@ class StreamlitGUI:
         st.markdown(self.interview_instructions)
 
 
-    def display_file_uploader(self) -> None: 
-        """Displays the file upload section"""
+    def display_paper_uploader(self) -> None: 
+        """Displays the paper upload section"""
         if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error: 
-            with self.file_upload_container: 
+            with self.paper_upload_container: 
                 # add option to upload one pdf here 
                 st.file_uploader(
                     label="Upload the paper here", 
                     type="pdf", 
-                    on_change=self.on_file_upload,
+                    on_change=self.on_paper_upload,
                     key='file_uploader',
-                    help="Upload a pdf of the paper here"
+                    help="Upload a pdf of the paper here. This tool only accepts PDFs and only accepts one file at a time. Uploading a new file will replace the previously uploaded file."
                 )
+
+
+    def display_uploaded_paper(self) -> None: 
+        if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error and st.session_state.uploaded_paper_name: 
+            with self.uploaded_paper_container: 
+                st.markdown(f"Uploaded paper: {st.session_state.uploaded_paper_name}")
 
 
     def display_restart_interview_button(self) -> None: 
@@ -265,6 +294,18 @@ class StreamlitGUI:
                     label="Generate", 
                     help='Generate summary of the interview', 
                     on_click=self.on_generate_summary_button
+                )
+
+
+    def display_load_past_session(self) -> None: 
+        """Displays a button that can load a past session"""
+        if not st.session_state.show_login_form: 
+            with st.sidebar: 
+                st.markdown("To load a past session, click below")
+                st.button(
+                    label="Load a Past Session", 
+                    help="Check for past sessions and load them", 
+                    on_click=self.on_load_past_session_button
                 )
 
 
@@ -334,7 +375,7 @@ class StreamlitGUI:
         st.session_state.reached_error = False 
 
         # remove any other session variable to start over 
-        for key in ['transcript_history', 'start_time', 'session_id', 'log', 'log_stream', 'show_confirm_restart', 'found_closing_msg', 'uploaded_paper']: 
+        for key in ['transcript_history', 'start_time', 'session_id', 'log', 'log_stream', 'show_confirm_restart', 'found_closing_msg', 'uploaded_paper_name', 'uploaded_paper_content']: 
             if key in st.session_state:
                 del st.session_state[key]
 
@@ -369,25 +410,81 @@ class StreamlitGUI:
             self.log("error", f"Error processing user input: {e}", st.session_state.to_dict())
 
 
-    def on_file_upload(self) -> None: 
-        """Function that runs when a file is uploaded
+    def on_paper_upload(self) -> None: 
+        """Function that runs when a paper is uploaded
 
-        The function will read the file as base64, and then save it to dropbox
+        The function will read the paper as base64, and then save it to dropbox
         """
         try: 
-            uploaded_file = st.session_state.file_uploader
-            if uploaded_file: 
-                self.log("warning", f"Uploaded file {uploaded_file.name}", st.session_state.to_dict())
+            uploaded_paper = st.session_state.file_uploader
+            if uploaded_paper: 
+                self.log("warning", f"Uploaded paper {uploaded_paper.name}", st.session_state.to_dict())
                 # save the base64 so that we can use it in the API 
-                st.session_state.uploaded_paper = base64.b64encode(uploaded_file.getvalue()).decode('utf-8') 
+                st.session_state.uploaded_paper_content = base64.b64encode(uploaded_paper.getvalue()).decode('utf-8') 
+                st.session_state.uploaded_paper_name = uploaded_paper.name
 
                 # also save the document to dropbox so that we can know what was uploaded 
-                doc_bytes = BytesIO(uploaded_file.read())
-                thread = threading.Thread(target=self.save_file_upload_to_dropbox, args=(st.session_state.to_dict(), uploaded_file.name, doc_bytes)) 
+                doc_bytes = io.BytesIO(uploaded_paper.read())
+                thread = threading.Thread(target=self.save_file_upload_to_dropbox, args=(st.session_state.to_dict(), uploaded_paper.name, doc_bytes)) 
                 thread.start() 
         except Exception as e: 
             st.session_state.reached_error = True 
             self.log('error', f"Error processing file upload: {e}", st.session_state.to_dict())
+
+
+    @st.dialog("Load Past Session", width='large')
+    def on_load_past_session_button(self) -> None: 
+        self.log("warning", "Checking for past sessions", st.session_state.to_dict()) 
+        with st.spinner('Checking for past sessions', show_time=True): 
+            past_transcripts_map = self.get_past_sessions(st.session_state.session_id)
+        if len(past_transcripts_map) > 0: 
+            # there are past transcripts so show to the user 
+            session_chosen = st.selectbox(
+                'Select a session', 
+                past_transcripts_map, 
+                index=None, 
+                placeholder='Select a past session...', 
+                label_visibility='collapsed'
+            )
+
+            if session_chosen: 
+                # if a session has been chosen, show a preview of the conversation 
+
+                # build the conversation preview 
+                session_conversation = "" 
+                for row in past_transcripts_map[session_chosen]['transcript']: 
+                    session_conversation += f"**{row['role'].capitalize()}:** {row['content']}\n\n"
+
+                # limit the preview so that the page doesn't get too big
+                if len(session_conversation) >= 1500: 
+                    session_conversation = session_conversation[:1500].strip() + '...'
+
+                # show the preview 
+                st.markdown(f"**Session conversation:**\n\n{session_conversation}")
+
+                # add note about uploaded paper 
+                if past_transcripts_map[session_chosen]['uploaded_paper'] is not None: 
+                    st.markdown(f"Uploaded paper: {past_transcripts_map[session_chosen]['uploaded_paper']['name']}")
+
+                # add confirmation button to move forward with the chosen session 
+                confirm_button = st.button(
+                    label='Choose session', 
+                    help='Click to load the currently selected session', 
+                    type='primary', 
+                    use_container_width=False
+                )
+                if confirm_button: 
+                    # when confirmed, load the session 
+                    st.session_state.transcript_history = past_transcripts_map[session_chosen]['transcript'] 
+                    st.session_state.session_id = past_transcripts_map[session_chosen]['transcript'][0]['session_id'] 
+                    if past_transcripts_map[session_chosen]['uploaded_paper'] is not None: 
+                        st.session_state.uploaded_paper_content = past_transcripts_map[session_chosen]['uploaded_paper']['content']
+                        st.session_state.uploaded_paper_name = past_transcripts_map[session_chosen]['uploaded_paper']['name']
+                    else: 
+                        st.session_state.uploaded_paper_content = None 
+                    st.rerun() 
+        else: 
+            st.markdown("No past sessions found")
 
 
     @st.dialog("Interview Summary Document")
@@ -421,7 +518,7 @@ class StreamlitGUI:
 
             try: 
                 # add the title to the top 
-                summary = f"# Interview Summary\n\nGenerated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}\n\n" + summary 
+                summary = f"# Interview Summary\n\nGenerated on {datetime.now(pytz.timezone('UTC')).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}\n\n" + summary 
 
                 # convert the markdown into word doc 
                 with tempfile.NamedTemporaryFile(suffix=".docx", delete=True) as tmp_file: 
@@ -438,7 +535,7 @@ class StreamlitGUI:
                     with open(temp_path, "rb") as f: 
                         doc_content = f.read() 
 
-                    doc_bytes = BytesIO(doc_content) 
+                    doc_bytes = io.BytesIO(doc_content) 
 
             except Exception as e: 
                 st.session_state.reached_error = True 
@@ -468,7 +565,7 @@ class StreamlitGUI:
             # if the user clicked confirm then restart
             self.log("warning", "Restarting interview", st.session_state.to_dict())
             # reset some session state variables 
-            for key in ['transcript_history', 'start_time', 'session_id', 'log', 'log_stream', 'show_confirm_restart', 'found_closing_msg', 'uploaded_paper']: 
+            for key in ['transcript_history', 'start_time', 'session_id', 'log', 'log_stream', 'show_confirm_restart', 'found_closing_msg', 'uploaded_paper_content', 'uploaded_paper_name']: 
                 if key in st.session_state:
                     del st.session_state[key]
             # restart the interview 
@@ -488,9 +585,15 @@ class StreamlitGUI:
         if not st.session_state.transcript_history: 
             # no messages so far, stream initial message 
             self.log("warning", "Streaming initial message", st.session_state.to_dict())
-            client = AICompanyGateway.factory(company=self.ai_company, api_key=st.secrets[f"API_KEY_{self.ai_company.upper()}"]) 
-            stream = client.stream_message(model=self.ai_model, messages=[{"role": "user", "content": "Hi!"}], max_tokens=self.max_tokens, system_message=self.system_message)
-            self.stream_message(stream) 
+            with self.chat_container: 
+                with st.chat_message('assistant', avatar=self.interviewer_avatar): 
+                    # stream the message 
+                    streamlit_msg = st.empty() 
+                    for i in range(0, len(self.first_interviewer_message), len(self.first_interviewer_message) // 10): 
+                        streamlit_msg.markdown(self.first_interviewer_message[:i] + "▌")
+                        time.sleep(0.03)
+                    streamlit_msg.markdown(self.first_interviewer_message)
+            self.save_msg_to_session('assistant', self.first_interviewer_message)
 
 
     def stream_message(self, stream:Generator) -> None: 
@@ -571,18 +674,18 @@ class StreamlitGUI:
         session_state['log_stream'].seek(0, 2) 
 
 
-    def save_log_to_dropbox(self, session_state:Dict, log_stream:BytesIO) -> None: 
+    def save_log_to_dropbox(self, session_state:Dict, log_stream:io.BytesIO) -> None: 
         """Saves logs to dropbox 
 
         Args:
             session_state (Dict): the current session state
-            log_stream (BytesIO): the log stream with all the log messages 
+            log_stream (io.BytesIO): the log stream with all the log messages 
         """
         save_fpath = Path(self.dropbox_path)/session_state['username']/f"log+{session_state['username']}+{session_state['session_id']}.log"
 
         content = log_stream.getvalue().encode("utf-8") 
 
-        self.save_to_dropbox(BytesIO(content), str(save_fpath))
+        self.save_to_dropbox(io.BytesIO(content), str(save_fpath))
 
 
     def save_transcript_to_dropbox(self, session_state:Dict) -> None: 
@@ -600,23 +703,23 @@ class StreamlitGUI:
 
         # save the transcript history 
         df = pd.DataFrame(session_state['transcript_history'])
-        csv_content = BytesIO() 
+        csv_content = io.BytesIO() 
         df.to_csv(csv_content, index=False, encoding='utf-8')
         csv_content.seek(0)
         self.save_to_dropbox(csv_content, str(save_fpath))
 
 
-    def save_summary_to_dropbox(self, session_state:Dict, doc_content:BytesIO) -> None: 
+    def save_summary_to_dropbox(self, session_state:Dict, doc_content:io.BytesIO) -> None: 
         """Saves the summary docx to dropbox 
 
         Usually runs in a separate thread to not interrupt the main chatbot experience 
 
         Args:
             session_state (Dict): the current session state dict to reference inside the thread 
-            doc_content (BytesIO): the docx data to save 
+            doc_content (io.BytesIO): the docx data to save 
         """
         # create the path to save to 
-        save_fpath = Path(self.dropbox_path)/session_state['username']/f"summary_document+{session_state['username']}+{session_state['session_id']}+{int(datetime.now(timezone.utc).timestamp())}.docx"
+        save_fpath = Path(self.dropbox_path)/session_state['username']/f"summary_document+{session_state['username']}+{session_state['session_id']}+{int(datetime.now(pytz.timezone('UTC')).timestamp())}.docx"
 
         self.log("warning", f"Saving summary to dropbox to {save_fpath}", session_state)
 
@@ -624,7 +727,7 @@ class StreamlitGUI:
         self.save_to_dropbox(doc_content, str(save_fpath))
 
 
-    def save_file_upload_to_dropbox(self, session_state:Dict, file_name:str, doc_content:BytesIO) -> None: 
+    def save_file_upload_to_dropbox(self, session_state:Dict, file_name:str, doc_content:io.BytesIO) -> None: 
         """Saves the uploaded PDF to dropbox 
 
         Usually runs in a separate thread to not interrupt the main chatbot experience 
@@ -632,10 +735,10 @@ class StreamlitGUI:
         Args:
             session_state (Dict): the current session state dict to reference inside the thread 
             file_name (str): the name of the file
-            doc_content (BytesIO): the docx data to save 
+            doc_content (io.BytesIO): the docx data to save 
         """
         # create the path to save to 
-        save_fpath = Path(self.dropbox_path)/session_state['username']/f"uploaded_file+{session_state['username']}+{session_state['session_id']}+{int(datetime.now(timezone.utc).timestamp())}+{file_name}"
+        save_fpath = Path(self.dropbox_path)/session_state['username']/f"uploaded_paper+{session_state['username']}+{session_state['session_id']}+{int(datetime.now(pytz.timezone('UTC')).timestamp())}+{file_name}"
 
         self.log("warning", f"Saving uploaded PDF to dropbox to {save_fpath}", session_state)
 
@@ -643,13 +746,13 @@ class StreamlitGUI:
         self.save_to_dropbox(doc_content, str(save_fpath))
 
 
-    def save_to_dropbox(self, content:BytesIO, save_fpath:str) -> None: 
+    def save_to_dropbox(self, content:io.BytesIO, save_fpath:str) -> None: 
         """Saves some content to dropbox 
 
         Usually runs in a separate thread to not interrupt the main chatbot experience 
 
         Args:
-            content (BytesIO): the content to save
+            content (io.BytesIO): the content to save
             save_fpath (str): the path to save to 
         """
         tries = 3
@@ -677,7 +780,7 @@ class StreamlitGUI:
             content (str): the message sent 
         """
         st.session_state.transcript_history.append({
-            'time': datetime.now(timezone.utc).isoformat(timespec='milliseconds'), 
+            'time': datetime.now(pytz.timezone('UTC')).isoformat(timespec='milliseconds'), 
             'session_id': st.session_state.session_id, 
             'user': st.session_state.username, 
             'role': role, 
@@ -692,7 +795,7 @@ class StreamlitGUI:
             List[Dict[str, str]]: a list of dicts with the messages for the AI
         """
         messages = [] 
-        if st.session_state.uploaded_paper: 
+        if st.session_state.uploaded_paper_content: 
             if self.ai_company == 'anthropic': 
                 messages.append({
                     'role': 'user', 
@@ -702,7 +805,7 @@ class StreamlitGUI:
                             'source': {
                                 'type': 'base64', 
                                 'media_type': 'application/pdf', 
-                                'data': st.session_state.uploaded_paper
+                                'data': st.session_state.uploaded_paper_content
                             }, 
                             'cache_control': {'type': 'ephemeral'}
                         }, 
@@ -733,3 +836,74 @@ class StreamlitGUI:
             if c.lower() in msg.lower() or m.lower() in msg.lower(): 
                 return True, m 
         return False, msg 
+    
+
+    @st.cache_resource(show_spinner=False)
+    def get_past_sessions(_self, current_session_id:str) -> Dict: 
+        """Function that searches for past sessions in dropbox 
+
+        Args:
+            current_session_id (str): the current session ID so that we don't include it 
+
+        Returns:
+            Dict: a dictionary that maps session name to a dictionary {'transcript': [contains transcript], 'uploaded_paper': {'name': [name of file], 'content': [pdf content]}}
+        """
+        # connect to dropbox 
+        dbx = dropbox.Dropbox(oauth2_refresh_token=st.secrets['REFRESH_TOKEN_DROPBOX'], app_key=st.secrets['APP_KEY_DROPBOX'], app_secret=st.secrets['APP_SECRET_DROPBOX']) 
+
+        # search for transcript files 
+        transcripts_fpath = Path(_self.dropbox_path)/st.session_state['username']
+        past_transcripts = dbx.files_search_v2(
+            query="transcript*.csv", 
+            options=dropbox.files.SearchOptions(
+                path=str(transcripts_fpath), 
+                order_by=dropbox.files.SearchOrderBy.last_modified_time
+            )
+        )
+
+        past_transcripts_map = {}
+        session_count = 1
+        for transcript in list(past_transcripts.matches)[::-1]: 
+            # get the transcript 
+            fname = transcript.metadata.get_metadata().name 
+            past_transcript_session_id = fname.replace('.csv', '').split('+')[-1] 
+            if past_transcript_session_id == current_session_id: 
+                # skip current session 
+                continue 
+            _, response = dbx.files_download(str(transcripts_fpath/fname))
+            content = response.content.decode('utf-8') 
+
+            # read the transcript and save it 
+            csv_reader = csv.DictReader(io.StringIO(content))
+            transcript_data = [row for row in csv_reader] 
+            first_time = datetime.fromisoformat(transcript_data[0]['time']).astimezone(pytz.timezone('US/Eastern')).strftime('%Y-%m-%d %H:%M:%S EST')
+            past_transcripts_map[f"Session {session_count} from {first_time}"] = {'transcript': transcript_data} 
+
+            # find uploaded paper 
+            past_uploaded_paper = dbx.files_search_v2(
+                query=f"uploaded_paper+{st.session_state['username']}+{past_transcript_session_id}+*.pdf", 
+                options=dropbox.files.SearchOptions(
+                    path=str(transcripts_fpath), 
+                    order_by=dropbox.files.SearchOrderBy.last_modified_time
+                )
+            )
+            if past_uploaded_paper.matches: 
+                # if there was an uploaded paper, get the last uploaded file 
+                last_uploaded_paper = max(
+                    [x.metadata.get_metadata().name for x in past_uploaded_paper.matches], 
+                    key=lambda x: int(x.replace('.pdf', '').split('+')[-2]) # max by the timestamp 
+                ) 
+                # read the content of the paper 
+                _, response = dbx.files_download(str(transcripts_fpath/last_uploaded_paper))
+                content = base64.b64encode(response.content).decode('utf-8')
+                # save it 
+                past_transcripts_map[f"Session {session_count} from {first_time}"]['uploaded_paper'] = {
+                    'name': last_uploaded_paper.split('+')[-1], 
+                    'content': content 
+                }
+            else: 
+                # no uploaded paper so set to None 
+                past_transcripts_map[f"Session {session_count} from {first_time}"]['uploaded_paper'] = None 
+            session_count += 1
+        return past_transcripts_map 
+    
