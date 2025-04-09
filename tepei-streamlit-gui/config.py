@@ -155,7 +155,7 @@ This AI tool has been designed to help you structure your evaluation of the pape
 - Answer naturally; the tool will guide the conversation by focusing on one theme at a time and asking follow-up questions when needed.
 - Move on to a new theme only when you indicate you are ready.
 - When finished, click **"Generate"** on the left sidebar to compile your conversation into a structured referee report. This may take a few minutes—please wait without pressing "X".
-- Fill out the [survey]() after completing your draft.
+- Fill out the [survey](https://hbs.qualtrics.com/jfe/form/SV_3pG35YeO7mjPItE) after completing your draft.
 
 **Additional Features** 
 - Click **"Restart"** to start a new conversation from scratch.
