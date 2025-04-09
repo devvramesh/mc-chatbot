@@ -243,12 +243,14 @@ class StreamlitGUI:
         if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error: 
             with self.paper_upload_container: 
                 # add option to upload one pdf here 
+                st.markdown("##### Upload the paper here")
                 st.file_uploader(
                     label="Upload the paper here", 
                     type="pdf", 
                     on_change=self.on_paper_upload,
                     key='file_uploader',
-                    help="Upload a pdf of the paper here. This tool only accepts PDFs and only accepts one file at a time. Uploading a new file will replace the previously uploaded file."
+                    help="Upload a pdf of the paper here. This tool only accepts PDFs and only accepts one file at a time. Uploading a new file will replace the previously uploaded file.", 
+                    label_visibility='collapsed'
                 )
 
 
@@ -820,6 +822,18 @@ class StreamlitGUI:
                 'role': row['role'], 
                 'content': row['content']
             })
+        if self.ai_company == 'anthropic' and messages[-1]['role'] == 'user': 
+            content = messages[-1]['content'] 
+            messages[-1] = {
+                'role': 'user', 
+                'content': [
+                    {
+                        'type': 'text', 
+                        'text': content, 
+                        'cache_control': {'type': 'ephemeral'}
+                    }
+                ]
+            }
         return messages 
 
 

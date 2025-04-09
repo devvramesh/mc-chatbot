@@ -27,11 +27,18 @@ class AnthropicGateway (AICompanyGateway):
         Returns:
             str: the messsage sent by the API 
         """
+        system = [
+            {
+                'type': 'text', 
+                'text': system_message, 
+                'cache_control': {'type': 'ephemeral'}
+            }
+        ]
         msg = self.__client.messages.create(
             model=model, 
             messages=messages, 
             max_tokens=max_tokens, 
-            system=system_message, 
+            system=system, 
             **kwargs
         ) 
         return msg.content[0].text 
@@ -49,11 +56,18 @@ class AnthropicGateway (AICompanyGateway):
         Yields:
             Generator[str, None, None]: yields the messages sent by the AI 
         """
+        system = [
+            {
+                'type': 'text', 
+                'text': system_message, 
+                'cache_control': {'type': 'ephemeral'}
+            }
+        ]
         with self.__client.messages.stream(
             model=model, 
             messages=messages, 
             max_tokens=max_tokens, 
-            system=system_message, 
+            system=system, 
             **kwargs
         ) as stream: 
             for text_delta in stream.text_stream: 
