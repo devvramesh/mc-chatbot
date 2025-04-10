@@ -181,11 +181,11 @@ LOGINS = True
 
 
 # Directories
-DROPBOX_PATH = "/AI interviewer/Referee Report Guide/interviews-main-referee/r4-data/"
+DROPBOX_PATH = "/AI interviewer/AI Referee Interviewer/data/"
 
 # Page info
 PAGE_TITLE = "AI Referee Interviewer"
-PAGE_ICON = "./tepei-streamlit-gui/resources/hbs_page_icon.png"
+PAGE_ICON = "./ai-referee-interviewer-streamlit-gui/resources/hbs_page_icon.png"
 
 
 # Avatars displayed in the chat interface
