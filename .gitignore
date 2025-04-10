@@ -83,3 +83,6 @@ tepei-assessment/output
 
 ### VentureLAB stuff ### 
 venturelab-evaluation-streamlit-gui/streamlit_authentication/*
+
+### AI Referee Interviewer stuff ### 
+ai-referee-interviewer-streamlit-gui/streamlit_authentication/*
