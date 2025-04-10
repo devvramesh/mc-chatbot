@@ -181,7 +181,7 @@ LOGINS = True
 
 
 # Directories
-DROPBOX_PATH = "/AI interviewer/Referee Report Guide/interviews-main-referee/r4-data/"
+DROPBOX_PATH = "/AI interviewer/Referee Report Guide/interviews-main-referee/r4-data"
 
 # Page info
 PAGE_TITLE = "TEPEI 2025 AI Interviewer"
