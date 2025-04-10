@@ -155,7 +155,7 @@ This AI tool has been designed to help you structure your evaluation of the pape
 - Answer naturally; the tool will guide the conversation by focusing on one theme at a time and asking follow-up questions when needed.
 - Move on to a new theme only when you indicate you are ready.
 - When finished, click **"Generate"** on the left sidebar to compile your conversation into a structured referee report. This may take a few minutes—please wait without pressing "X".
-- Fill out the [survey](https://hbs.qualtrics.com/jfe/form/SV_3pG35YeO7mjPItE) after completing your draft.
+- You have the option to upload the paper you are reviewing to the bot. Please note that you may only upload PDFs and may only upload one file at a time. Uploading a new file will replace the previously uploaded file. Please ensure that the uploaded PDF has less than 100 pages and is smaller than 32 MB, otherwise functionality may be limited. 
 
 **Additional Features** 
 - Click **"Restart"** to start a new conversation from scratch.
@@ -184,7 +184,7 @@ LOGINS = True
 DROPBOX_PATH = "/AI interviewer/Referee Report Guide/interviews-main-referee/r4-data/"
 
 # Page info
-PAGE_TITLE = "TEPEI 2025 AI Interviewer"
+PAGE_TITLE = "AI Referee Interviewer"
 PAGE_ICON = "./tepei-streamlit-gui/resources/hbs_page_icon.png"
 
 

@@ -920,4 +920,3 @@ class StreamlitGUI:
                 past_transcripts_map[f"Session {session_count} from {first_time}"]['uploaded_paper'] = None 
             session_count += 1
         return past_transcripts_map 
-    
