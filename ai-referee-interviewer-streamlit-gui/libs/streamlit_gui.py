@@ -249,6 +249,7 @@ class StreamlitGUI:
                     type="pdf", 
                     on_change=self.on_paper_upload,
                     key='file_uploader',
+                    accept_multiple_files=False, 
                     help="Upload a pdf of the paper here. This tool only accepts PDFs and only accepts one file at a time. Uploading a new file will replace the previously uploaded file.", 
                     label_visibility='collapsed'
                 )
