@@ -346,6 +346,7 @@ This interviewer agent is designed to assist you in your evaluation by facilitat
 
 Here are some guidelines for using the bot: 
 
+- You may upload the venture's pitch deck to provide the bot with more context on the venture that you are evaluating 
 - Provide your initial thoughts clearly and specifically.
 - Discuss one scoring criteria at a time; indicate readiness to move on.
 - Provide concrete examples to clarify your points.
@@ -353,10 +354,11 @@ Here are some guidelines for using the bot:
 
 **Additional Features**:
 
-- Click "Quit" to end the session.
-- Click "Restart" for a new evaluation.
-- Avoid closing the window before generating your summary to retain your progress.
-- Please note: Streamlit keeps a log of all your conversations once sessions start. 
+- Click **"Restart"** to start a new conversation from scratch.
+- Avoid refreshing or closing the window before generating the report to prevent losing progress.
+- You can restart a previous session by clicking the **"Load a Past Session"** button and choosing a particular session 
+- If an error occurs, click **"Try again"** and manually reattempt the last action. If issues persist, email Andrew Wu at anwu@hbs.edu.
+- Please note: Streamlit keeps a log of all your conversations once sessions start.
 """
 
 
