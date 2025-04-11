@@ -187,7 +187,7 @@ class StreamlitGUI:
 
         if 'log' not in st.session_state: 
             # objects for logging 
-            log_stream, log = setup_logger('ai-referee-interviewer-streamlit-gui')
+            log_stream, log = setup_logger('venturelab-evaluation-streamlit-gui')
             st.session_state.log = log 
             st.session_state.log_stream = log_stream 
 
@@ -232,7 +232,7 @@ class StreamlitGUI:
                     st.markdown(self.interview_instructions)
 
 
-    @st.dialog(f"AI Referee Intervier Guide", width='large')
+    @st.dialog(f"VentureVox Guide", width='large')
     def display_instructions(self) -> None: 
         """Displays instructions in a pop up dialog"""
         st.markdown(self.interview_instructions)
@@ -268,20 +268,20 @@ class StreamlitGUI:
             with st.sidebar: 
                 if st.session_state.show_confirm_restart: 
                     # show confirmation message 
-                    st.markdown("**Are you sure you want to restart?**\nYou will be starting the conversation from scratch")
+                    st.markdown("**Are you sure you want to restart?**\nYou will be starting the VentureVox from scratch")
                     # add the button and runs self.on_restart_button when hit 
                     st.button(
                         label="**Confirm**", 
-                        help='Confirm restarting the interview', 
+                        help='Confirm restarting the VentureVox', 
                         on_click=self.on_restart_button, 
                         type='primary'
                     )
                 else: 
-                    st.markdown("To restart the interview from scratch, click restart below")
+                    st.markdown("To restart the VentureVox from scratch, click restart below")
                     # add the button and runs self.on_restart_button when hit 
                     st.button(
                         label="Restart", 
-                        help='Restart the interview', 
+                        help='Restart the VentureVox', 
                         on_click=self.on_restart_button
                     )
 
@@ -291,11 +291,11 @@ class StreamlitGUI:
         if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error: 
             # button is always displayed unless we are in the login page to allow people to generate the document at any time 
             with st.sidebar: 
-                st.markdown("To generate a summary document of the interview, click generate below") 
+                st.markdown("To generate a summary document of the VentureVox, click generate below") 
                 # add the button and runs self.on_generate_summary_button when hit 
                 st.button(
                     label="Generate", 
-                    help='Generate summary of the interview', 
+                    help='Generate summary of the VentureVox', 
                     on_click=self.on_generate_summary_button
                 )
 
@@ -352,7 +352,7 @@ class StreamlitGUI:
             st.session_state.interview_status = True 
 
         with self.error_container: 
-            st.error("An error occurred. Please try again or contact Miaomiao at mzhang@hbs.edu.")
+            st.error("An error occurred. Please try again or contact Andrew Wu at anwu@hbs.edu.")
             st.button("Try again", on_click=try_again)
 
         # set the interview state to False as it's over 
@@ -490,7 +490,7 @@ class StreamlitGUI:
             st.markdown("No past sessions found")
 
 
-    @st.dialog("Interview Summary Document")
+    @st.dialog("VentureVox Summary Document")
     def on_generate_summary_button(self) -> None: 
         """Function that runs when the generate summary button is hit 
 
@@ -521,7 +521,7 @@ class StreamlitGUI:
 
             try: 
                 # add the title to the top 
-                summary = f"# Interview Summary\n\nGenerated on {datetime.now(pytz.timezone('UTC')).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}\n\n" + summary 
+                summary = f"# VentureVox Summary\n\nGenerated on {datetime.now(pytz.timezone('UTC')).strftime('%Y-%m-%d %H:%M:%S UTC')} by {st.session_state.name}\n\n" + summary 
 
                 # convert the markdown into word doc 
                 with tempfile.NamedTemporaryFile(suffix=".docx", delete=True) as tmp_file: 
@@ -553,7 +553,7 @@ class StreamlitGUI:
         message.markdown("To download the summary document, click download below")
         st.download_button(
             label='Download document', 
-            help='Download interview summary document', 
+            help='Download VentureVox summary document', 
             data=doc_bytes,
             file_name=f"{st.session_state.username}_interview_summary.docx", 
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
