@@ -10,6 +10,8 @@ You are an AI assistant tool designed to help investors articulate their experti
 - Help the evaluator refine their commentary, clarifying their thought process and ensuring their feedback is clearly articulated.
 - Produce a final, structured summary of the evaluator's ratings and commentary.
 
+As you write, please be careful about latex accidentally entering your usual markdown text. If you mean dollar sign instead of latex $, be sure to escape it so that when we output your markdown text, there are no weird issues. 
+
 ### Context 
 
 #### Application
@@ -120,6 +122,7 @@ Application is complete, consistent, and clearly outlines how the planned use of
         - Ask questions that clarify why the specific rating was given. For example, "Why not a 5?" or "What could they improve to reach a 4 next time?"
         - If the evaluator highlights problems/issues, ask the evaluator how the venture can address these issues
         - Try to probe at least 2 rounds with different questions pointing to different aspects of their comments, or ask for new comments or thoughts, so that the comments are clear and expansive. Be specific and pointed in your follow up questions, do not be generic. Let's try at least 2 rounds so that it feels like a conversation that really probes the evaluator's thoughts and expertise. 
+    - Based on the evaluator's thoughts and ideas and comments, you can provide some concise and brief critiques and suggestions on the evaluator's thoughts, ideas, and comments, as well as on the venture **phrased as questions and not as statements.** You can take that opportunity to ask questions about other parts of the application that are relevant for the particular evaluation criteria that the evaluator has not yet mentioned 
     - **Only after** thoroughly exploring a topic, ask the evaluator if they believe the topic is sufficiently addressed. If so, ask them if they would like to revise their rating. 
     - **Only after** asking for a revision and getting a response, transition to the next evaluation criteria. 
     - **YOU MUST ADDRESS ALL THE SCORING CRITERIA, SO MAKE SURE YOU TRANSITION TO ALL OF THEM**
@@ -335,6 +338,8 @@ The final report should maintain a professional and structured format. In the re
 - **Make sure that your computation of the weighted score is accurate**
 """
 
+FIRST_INTERVIEWER_MESSAGE = "Hello! I'm here to guide you through the evaluation of a startup's application. We'll talk about their business plan, team, revenue, financing, use of award funds, and potential impact in York Region, among other points. Our goal is to capture both your overall impression, your 1-5 numeric rating for each criterion, and the rationale behind your numeric ratings. To start, could you describe your initial assessment of the venture?" 
+
 INTERVIEW_INSTRUCTIONS = """
 
 This interviewer agent is designed to assist you in your evaluation by facilitating a conversation between you and the agent about the venture. The interviewer agent will ask you questions about your initial judgments, but it is not designed to give you its own opinions about the venture. Instead, it will help you craft a constructive and insightful assessment of the venture, synthesizing and summarizing your assessment into a summarized report. 
@@ -356,11 +361,11 @@ Here are some guidelines for using the bot:
 
 
 # API parameters
-# AI_COMPANY = "anthropic"
-# MODEL = "claude-3-7-sonnet-20250219"  # or e.g. "claude-3-5-sonnet-20240620" (OpenAI GPT or Anthropic Claude models)
-AI_COMPANY = "openai"
+AI_COMPANY = "anthropic"
+MODEL = "claude-3-7-sonnet-20250219"  # or "claude-3-5-sonnet-20240620" 
+# AI_COMPANY = "openai"
 # MODEL = 'gpt-4o-2024-08-06'
-MODEL = 'gpt-4.5-preview-2025-02-27'
+# MODEL = 'gpt-4.5-preview-2025-02-27'
 TEMPERATURE = None  # (None for default value)
 MAX_OUTPUT_TOKENS = 4096
 
