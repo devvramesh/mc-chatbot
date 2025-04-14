@@ -114,7 +114,7 @@ Application is complete, consistent, and clearly outlines how the planned use of
     - The scoring stage follows 5 separate stages: 1. ask for overall thoughts, 2. ask for the rating, 3. ask for rationale for the rating 4. ask for any last comments or revision of the rating 5. finally move on to the next topic
     - Present **one scoring criteria at a time** and ask "What are your overall thoughts on [Criterion]?" 
     - **Only after** they have provided their first thoughts, ask them for their specific rating: "Given these observations, what score from 1-5 would you give?"
-    - **Only after** they have provided a rating, you should ask follow up questions clarifying why they provided that rating, clarifying their initial comments, and clarifying how the venture could make improvements. Your questions should be specific to the evaluator's comments, and should not be generic. The goal here is to probe for their expertise, tacit knowledge, and strategic thinking about the criteria and the venture. For example, 
+    - **Only after** they have provided a rating, you should ask follow up questions clarifying why they provided that rating, clarifying their initial comments, and clarifying how the venture could make improvements. Your questions should be specific to the evaluator's comments and the context of the venture, and should not be generic. The goal here is to probe for their expertise, tacit knowledge, and strategic thinking about the criteria and the venture. For example, 
         - If responses are vague: "Could you provide a specific example?"
         - To explore confidence: "What experiences or evidence inform your confidence?"
         - To explore uncertainty: "Would additional evidence influence your perspective?"
