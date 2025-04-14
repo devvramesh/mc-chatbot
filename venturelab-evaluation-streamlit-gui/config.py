@@ -219,7 +219,8 @@ Provide the evaluator's comments in bullet points:
 
 The final report should maintain a professional and structured format. In the report, you must follow these instructions too: 
 - Use a clear and organized format. The final report must clearly separate different themes using bullet points. Avoid sequences where different themes are merged into a single bullet point 
-- **Ensure all points raised by the user are explicitly captured in the final report. Ensure that all explicitly mentioned concepts, examples, or details are retained in the final report unless the user asks to exclude them. Do not restructure, reevaluate or omit points unless instructed. Do not make inferences on what the user has said. ACCURACY IS VERY IMPORTANT**
+- **Ensure all points raised by the user are explicitly captured in the final report. Ensure that all explicitly mentioned concepts, examples, or details are retained in the final report unless the user asks to exclude them. ACCURACY IS VERY IMPORTANT**
+- Make sure that the explanation of the evaluator's ratings and comments are not generic, and are specific to the evaluator's comments and the specific venture 
 - The tone and the language should be consistent with the user's language. 
 - No forward-looking statements
 - *No conversational endings or suggestions for further discussion*
