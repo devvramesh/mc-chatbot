@@ -352,7 +352,7 @@ class StreamlitGUI:
             st.session_state.interview_status = True 
 
         with self.error_container: 
-            st.error("An error occurred. Please try again or contact Miaomiao at mzhang@hbs.edu.")
+            st.error("An error occurred. Please try again or contact Andrew Wu at anwu@hbs.edu.")
             st.button("Try again", on_click=try_again)
 
         # set the interview state to False as it's over 
