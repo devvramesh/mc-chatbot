@@ -243,14 +243,14 @@ class StreamlitGUI:
         if not st.session_state.show_login_form and st.session_state.interview_status and not st.session_state.reached_error: 
             with self.file_upload_container: 
                 # add option to upload one pdf here 
-                st.markdown("##### Upload pitch deck here")
+                st.markdown("##### Upload judge's feedback here")
                 st.file_uploader(
-                    label="Upload pitch deck here", 
+                    label="Upload judge's feedback here", 
                     type="pdf", 
                     accept_multiple_files=False, 
                     on_change=self.on_file_upload,
                     key='file_uploader',
-                    help="Upload pitch deck here. This tool only accepts PDFs and only accepts one file at a time. Uploading a new file will replace the previously uploaded file.", 
+                    help="Upload judge's feedback here. This tool only accepts PDFs and only accepts one file at a time. Uploading a new file will replace the previously uploaded file.", 
                     label_visibility='collapsed'
                 )
 
